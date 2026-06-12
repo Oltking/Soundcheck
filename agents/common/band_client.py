@@ -1,8 +1,9 @@
 """Band client wiring — env, credentials, model routing, agent factory.
 
-Verified against band_research/ (appendix §0/§1/§6):
-- Package `band-sdk`, import namespace `thenvoi`.
-- Credentials per agent in agent_config.yaml, loaded via thenvoi.config.load_agent_config.
+Verified against band_research/ (appendix §0/§1/§6) and the LIVE SDK:
+- Package `band-sdk`. DISCREPANCY vs appendix: since v1.0.0 the import
+  namespace is `band` (was `thenvoi` at v0.2.x). Same API surface.
+- Credentials per agent in agent_config.yaml, loaded via band.config.load_agent_config.
 - Models route through OpenAI-compatible endpoints only (no paid Anthropic/OpenAI keys):
     frontier  → AI/ML API      https://api.aimlapi.com/v1   (Claude/GPT/Gemini)
     oss       → Featherless    https://api.featherless.ai/v1 (Qwen/DeepSeek/...)
@@ -48,10 +49,17 @@ def ws_url() -> str:
 
 def frontier_llm(model: str = FRONTIER_DEFAULT_MODEL, **kwargs):
     """ChatOpenAI routed to AI/ML API — reasoning-heavy roles
-    (Bandleader, Compliance Mapper, Fixer=Claude, Reviewer)."""
+    (Bandleader, Compliance Mapper, Fixer=Claude, Reviewer).
+
+    disable_streaming=True: AI/ML API's Anthropic translation repeats the full
+    tool name in every streamed chunk; LangChain's chunk merge concatenates them
+    (>200 chars), which Anthropic then rejects on the next turn. Verified live
+    2026-06-13 — non-streaming round-trips are clean.
+    """
     from langchain_openai import ChatOpenAI
 
     load_env()
+    kwargs.setdefault("disable_streaming", True)
     return ChatOpenAI(
         model=model,
         base_url=FRONTIER_BASE_URL,
@@ -66,6 +74,7 @@ def oss_llm(model: str = OSS_DEFAULT_MODEL, **kwargs):
     from langchain_openai import ChatOpenAI
 
     load_env()
+    kwargs.setdefault("disable_streaming", True)
     return ChatOpenAI(
         model=model,
         base_url=OSS_BASE_URL,
@@ -77,15 +86,9 @@ def oss_llm(model: str = OSS_DEFAULT_MODEL, **kwargs):
 def agent_credentials(config_name: str) -> tuple[str, str]:
     """(agent_id, api_key) for a block in agent_config.yaml (repo root)."""
     load_env()
-    from thenvoi.config import load_agent_config
+    from band.config import load_agent_config
 
-    cwd = os.getcwd()
-    try:
-        # thenvoi.config resolves agent_config.yaml relative to CWD
-        os.chdir(REPO_ROOT)
-        return load_agent_config(config_name)
-    finally:
-        os.chdir(cwd)
+    return load_agent_config(config_name, config_path=str(REPO_ROOT / "agent_config.yaml"))
 
 
 def create_band_agent(config_name: str, adapter, **kwargs):
@@ -97,7 +100,7 @@ def create_band_agent(config_name: str, adapter, **kwargs):
         agent = create_band_agent("scout", adapter)
         await agent.run()
     """
-    from thenvoi import Agent
+    from band import Agent
 
     agent_id, api_key = agent_credentials(config_name)
     return Agent.create(

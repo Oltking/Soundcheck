@@ -106,7 +106,7 @@ async def main() -> None:
         encoding="utf-8",
     )
     await human.aclose()
-    print(f"\nDone: {created} registered, {skipped} skipped → {CONFIG_PATH.name}")
+    print(f"\nDone: {created} registered, {skipped} skipped -> {CONFIG_PATH.name}")
 
 
 if __name__ == "__main__":
