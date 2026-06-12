@@ -1,3 +1,13 @@
+# Private planning docs & research corpus — local only, never push
+CLAUDE.md
+BAND_API_APPENDIX.md
+BAND_RESEARCH_FULL.md
+Sound_Check_Master_Spec.md
+FRONTEND_ATTACK_PLAN.md
+THE_EXCHANGE_DESIGN.md
+THE_CONDUCTORS_PROMPT_DESIGN.md
+band_research/
+
 # Secrets — never commit (CLAUDE.md non-negotiable)
 .env
 .env.*
