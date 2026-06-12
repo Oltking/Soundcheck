@@ -1,0 +1,21 @@
+[project]
+name = "soundcheck-backend"
+version = "0.0.1"
+description = "Soundcheck BFF — run orchestration, Human-API/WS bridge, webhooks, ledger projection (read-only cache; Band is the system of record)"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "httpx",
+    "websockets",
+    "python-dotenv",
+    "pydantic",
+    # P4: "sqlalchemy", "alembic", "asyncpg", "PyGithub"
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio", "ruff"]
+
+[tool.setuptools]
+packages = ["app"]

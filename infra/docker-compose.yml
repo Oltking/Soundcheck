@@ -1,0 +1,23 @@
+# Soundcheck infra — Postgres is a read-projection cache ONLY (spec §17.2).
+# If this database vanished, the agents must still work: Band is the system of record.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: soundcheck-postgres
+    environment:
+      POSTGRES_USER: soundcheck
+      POSTGRES_PASSWORD: soundcheck
+      POSTGRES_DB: soundcheck
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soundcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

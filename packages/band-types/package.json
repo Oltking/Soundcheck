@@ -1,0 +1,11 @@
+{
+  "name": "@soundcheck/band-types",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MIT",
+  "description": "TypeScript types generated from Band's OpenAPI 3.1 spec (band_research/api/openapi.json, harvested 2026-06-08).",
+  "types": "./band.d.ts",
+  "scripts": {
+    "generate": "python ../../scripts/sanitize_openapi.py && npx openapi-typescript@7 openapi.sanitized.json -o band.d.ts"
+  }
+}

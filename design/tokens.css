@@ -1,0 +1,140 @@
+/* ============================================================
+   SOUNDCHECK — Design tokens
+   "Instrument panel meets concert hall." Warm beige light theme.
+   Severity is encoded by SHAPE + ICON as well as color (a11y).
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+:root {
+  /* ---- Paper & surfaces (warm, layered) -------------------- */
+  --paper:        #EFE8DA;  /* base background — aged paper / warm stage light */
+  --paper-well:   #E8E0CE;  /* recessed wells, inset tracks */
+  --surface:      #F4EFE3;  /* raised panel */
+  --surface-2:    #FAF6EC;  /* highest raised card */
+  --surface-3:    #FCFAF3;  /* popovers, the brightest light */
+  --inset:        #E3D9C5;  /* sunken track (scrubber, progress) */
+
+  /* ---- Ink (warm, never pure black) ------------------------ */
+  --ink:          #2B2420;  /* primary text — deep espresso */
+  --ink-2:        #6B6053;  /* secondary */
+  --ink-3:        #968A78;  /* muted / metadata */
+  --ink-4:        #B6AB97;  /* faint, placeholder */
+  --on-accent:    #FBF8F0;  /* text on teal */
+
+  /* ---- Hairlines ------------------------------------------- */
+  --line:         #DCD2BF;  /* default hairline */
+  --line-soft:    #E6DDCB;  /* faintest divider */
+  --line-strong:  #C9BCA2;  /* emphasized border */
+
+  /* ---- Accent: the one "performing / live" teal ------------ */
+  --live:         #1F8A7A;
+  --live-deep:    #157164;  /* hover / pressed */
+  --live-bright:  #2BA08D;  /* glow / thread of light */
+  --live-tint:    #DCEAE3;  /* tinted fill */
+  --live-line:    #A9CEC4;  /* tinted border */
+
+  /* ---- Semantic states (always paired with a shape) -------- */
+  --attention:      #B5801E;  /* amber/ochre — needs review  ▣ square */
+  --attention-tint: #EFE3C6;
+  --attention-line: #DCC489;
+
+  --severe:         #BC4F29;  /* terracotta — high severity  ◆ diamond */
+  --severe-tint:    #F0D9CD;
+  --severe-line:    #E0A98F;
+
+  --approved:       #5A7544;  /* moss — remediated / approved ● check */
+  --approved-tint:  #DDE4CE;
+  --approved-line:  #AFC093;
+
+  --archive:        #927546;  /* sepia — Master Tape / archive ▽ */
+  --archive-tint:   #E7DBC2;
+  --archive-line:   #CBB68C;
+
+  --info:           #5E6B72;  /* slate — neutral/info  – line */
+  --info-tint:      #E0E0DA;
+
+  /* ---- Elevation (warm-tinted, very soft) ------------------ */
+  --shadow-xs: 0 1px 1px rgba(64,48,24,0.05);
+  --shadow-sm: 0 1px 2px rgba(64,48,24,0.07);
+  --shadow:    0 3px 10px rgba(60,44,22,0.08), 0 1px 2px rgba(60,44,22,0.05);
+  --shadow-lg: 0 16px 40px rgba(52,38,18,0.13), 0 3px 10px rgba(52,38,18,0.07);
+  --glow-live: 0 0 0 4px rgba(31,138,122,0.14);
+
+  /* ---- Radii ---------------------------------------------- */
+  --r-xs: 5px;
+  --r-sm: 8px;
+  --r:    11px;
+  --r-lg: 15px;
+  --r-xl: 22px;
+  --r-pill: 999px;
+
+  /* ---- Spacing rhythm (8px base) -------------------------- */
+  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+  --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
+
+  /* ---- Type ----------------------------------------------- */
+  --ui:   'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* fluid-ish UI scale */
+  --t-display: 34px;
+  --t-h1: 26px;
+  --t-h2: 20px;
+  --t-h3: 16px;
+  --t-body: 14px;
+  --t-sm: 13px;
+  --t-xs: 12px;
+  --t-mono: 12.5px;
+  --t-micro: 11px;
+
+  /* motion */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur: 0.42s;
+}
+
+/* Tweakable knobs (overridden by the Tweaks panel via inline style on <html>) */
+:root {
+  --paper-warmth: 0;        /* -1 cooler ... +1 warmer, applied as hue shift */
+  --stream-speed: 1;        /* live-stream tick multiplier */
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--ui);
+  font-size: var(--t-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'ss01', 'cv05';
+}
+
+/* Tabular numerals everywhere numbers carry meaning */
+.mono { font-family: var(--mono); font-feature-settings: 'zero'; letter-spacing: -0.01em; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+::selection { background: var(--live-tint); color: var(--ink); }
+
+/* Custom warm scrollbars */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 999px; border: 3px solid transparent; background-clip: content-box; }
+*::-webkit-scrollbar-thumb:hover { background: var(--ink-4); background-clip: content-box; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- Severity glyph chips (shape + color, never color alone) ---- */
+.sev { display: inline-flex; align-items: center; gap: var(--s2);
+  font-family: var(--mono); font-size: var(--t-micro); letter-spacing: 0.02em;
+  text-transform: lowercase; padding: 2px 8px 2px 6px; border-radius: var(--r-pill);
+  border: 1px solid transparent; white-space: nowrap; }
+.sev svg { width: 11px; height: 11px; flex: none; }
+.sev-critical { color: var(--severe); background: var(--severe-tint); border-color: var(--severe-line); }
+.sev-attention { color: var(--attention); background: var(--attention-tint); border-color: var(--attention-line); }
+.sev-approved { color: var(--approved); background: var(--approved-tint); border-color: var(--approved-line); }
+.sev-archive { color: var(--archive); background: var(--archive-tint); border-color: var(--archive-line); }
+.sev-info { color: var(--info); background: var(--info-tint); border-color: #CFCFC6; }
+.sev-live { color: var(--live-deep); background: var(--live-tint); border-color: var(--live-line); }

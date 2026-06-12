@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Soundcheck — Design Language</title>
+<link rel="stylesheet" href="styles/tokens.css" />
+<style>
+  body { padding: 0; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: var(--s8) var(--s7) 120px; }
+
+  /* Masthead */
+  .mast { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s5);
+    padding-bottom: var(--s5); border-bottom: 1px solid var(--line); margin-bottom: var(--s7); }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .mark { width: 46px; height: 46px; border-radius: 13px; background: var(--ink);
+    display: grid; place-items: center; box-shadow: var(--shadow); flex: none; }
+  .mark svg { width: 26px; height: 26px; }
+  .wordmark { font-size: 27px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; }
+  .wordmark b { color: var(--live); font-weight: 600; }
+  .tagline { font-family: var(--mono); font-size: var(--t-xs); color: var(--ink-3);
+    margin-top: 5px; letter-spacing: 0.01em; }
+  .doc-meta { text-align: right; font-family: var(--mono); font-size: var(--t-xs); color: var(--ink-3); line-height: 1.7; }
+
+  section { margin-top: var(--s8); }
+  .eyebrow { font-family: var(--mono); font-size: var(--t-xs); letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--live-deep); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  .eyebrow::before { content: ""; width: 18px; height: 1px; background: var(--live); display: inline-block; }
+  h2 { font-size: var(--t-h1); font-weight: 600; letter-spacing: -0.02em; margin: 0 0 6px; }
+  .lede { color: var(--ink-2); max-width: 64ch; margin: 0 0 var(--s5); font-size: 15px; }
+
+  /* Metaphor vocabulary */
+  .vocab { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s3); }
+  .vrow { display: grid; grid-template-columns: 150px 1fr; gap: var(--s4); align-items: baseline;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r);
+    padding: var(--s4) var(--s5); }
+  .vterm { font-weight: 600; letter-spacing: -0.01em; }
+  .vterm span { display: block; font-family: var(--mono); font-size: var(--t-micro);
+    color: var(--ink-3); font-weight: 400; margin-top: 2px; }
+  .vdesc { color: var(--ink-2); font-size: var(--t-sm); }
+
+  /* Color */
+  .swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s3); }
+  .sw { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--surface); }
+  .sw .chip { height: 78px; border-bottom: 1px solid var(--line-soft); }
+  .sw .meta { padding: 10px 12px; }
+  .sw .name { font-size: var(--t-sm); font-weight: 500; }
+  .sw .hex { font-family: var(--mono); font-size: var(--t-micro); color: var(--ink-3); margin-top: 2px; }
+  .sw .role { font-size: var(--t-xs); color: var(--ink-3); margin-top: 5px; line-height: 1.4; }
+
+  /* Severity row */
+  .sev-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s3); }
+  .sevcard { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: var(--s4) var(--s5); }
+  .sevcard .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .sevcard .desc { font-size: var(--t-sm); color: var(--ink-2); }
+  .glyphlg { width: 22px; height: 22px; }
+
+  /* Type specimens */
+  .type-rows { display: flex; flex-direction: column; gap: var(--s2); }
+  .trow { display: grid; grid-template-columns: 120px 1fr; gap: var(--s5); align-items: baseline;
+    padding: 14px var(--s5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+  .tlabel { font-family: var(--mono); font-size: var(--t-xs); color: var(--ink-3); }
+  .panelnote { font-family: var(--mono); font-size: var(--t-xs); color: var(--ink-3); margin-top: 4px; }
+
+  /* Component gallery */
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s4); }
+  .demo { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+    padding: var(--s5); box-shadow: var(--shadow-sm); }
+  .demo h4 { margin: 0 0 4px; font-size: var(--t-sm); font-weight: 600; }
+  .demo .panelnote { margin: 0 0 16px; }
+  .demo-body { display: flex; flex-direction: column; gap: 12px; }
+
+  .btn { font-family: var(--ui); font-size: var(--t-sm); font-weight: 500; border-radius: var(--r-sm);
+    padding: 9px 16px; border: 1px solid transparent; cursor: pointer; display: inline-flex;
+    align-items: center; gap: 8px; transition: all .16s var(--ease); width: fit-content; }
+  .btn-primary { background: var(--live); color: var(--on-accent); box-shadow: var(--shadow-sm); }
+  .btn-primary:hover { background: var(--live-deep); }
+  .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+  .btn-ghost:hover { background: var(--paper-well); }
+  .btn-danger { background: transparent; color: var(--severe); border-color: var(--severe-line); }
+  .btn-danger:hover { background: var(--severe-tint); }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: var(--t-xs); color: var(--ink-2); font-weight: 500; }
+  .field input { font-family: var(--mono); font-size: var(--t-sm); padding: 9px 12px;
+    border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--surface-3); color: var(--ink); }
+  .field input:focus { outline: none; border-color: var(--live); box-shadow: var(--glow-live); }
+
+  /* mini player card */
+  .pcard { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r);
+    padding: 14px; box-shadow: var(--shadow-sm); }
+  .pcard .ph { display: flex; align-items: center; gap: 10px; }
+  .inst { width: 34px; height: 34px; border-radius: 9px; background: var(--paper-well);
+    display: grid; place-items: center; border: 1px solid var(--line); flex: none; }
+  .inst svg { width: 19px; height: 19px; color: var(--ink); }
+  .pname { font-weight: 600; font-size: var(--t-sm); letter-spacing: -0.01em; }
+  .phandle { font-family: var(--mono); font-size: var(--t-micro); color: var(--ink-3); }
+  .status { margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: var(--t-micro); color: var(--live-deep); }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--live);
+    box-shadow: 0 0 0 0 rgba(31,138,122,0.5); animation: breathe 2.4s var(--ease) infinite; }
+  @keyframes breathe { 0%,100% { box-shadow: 0 0 0 0 rgba(31,138,122,0.45); } 50% { box-shadow: 0 0 0 6px rgba(31,138,122,0); } }
+  .stream { margin-top: 12px; border-top: 1px solid var(--line-soft); padding-top: 10px;
+    font-family: var(--mono); font-size: var(--t-micro); color: var(--ink-2); line-height: 1.7; }
+  .stream .tool { color: var(--live-deep); }
+
+  /* ledger entry */
+  .ledger { display: flex; flex-direction: column; gap: 8px; }
+  .lentry { display: grid; grid-template-columns: auto 1fr; gap: 10px; padding: 11px 12px;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm); }
+  .ltitle { font-size: var(--t-sm); font-weight: 500; }
+  .lmeta { font-family: var(--mono); font-size: var(--t-micro); color: var(--ink-3); margin-top: 3px; }
+
+  /* elevation */
+  .elev-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s4); }
+  .elevcard { height: 90px; border-radius: var(--r); background: var(--surface-2);
+    border: 1px solid var(--line); display: grid; place-items: end center; padding-bottom: 10px;
+    font-family: var(--mono); font-size: var(--t-micro); color: var(--ink-3); }
+
+  /* motion principles */
+  .motion-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s4); }
+  .mcard { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+    padding: var(--s5); position: relative; overflow: hidden; }
+  .mcard h4 { margin: 0 0 4px; font-size: var(--t-h3); font-weight: 600; }
+  .mcard p { margin: 0; font-size: var(--t-sm); color: var(--ink-2); }
+  .thread-demo { height: 54px; margin-top: 16px; position: relative; }
+  .thread-demo svg { width: 100%; height: 100%; overflow: visible; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Masthead -->
+  <div class="mast">
+    <div class="brand">
+      <div class="mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1F8A7A" stroke-width="2" stroke-linecap="round">
+          <path d="M3 12h2.2l1.6-6 2.6 13 2.4-9 1.8 5 1.6-3H21" />
+        </svg>
+      </div>
+      <div>
+        <div class="wordmark">sound<b>check</b></div>
+        <div class="tagline">a governed autonomous workforce for security &amp; compliance</div>
+      </div>
+    </div>
+    <div class="doc-meta">
+      design language · v0.1<br />
+      warm beige light · desktop-first<br />
+      locked: jun 2026
+    </div>
+  </div>
+
+  <!-- Metaphor -->
+  <section style="margin-top: 0;">
+    <div class="eyebrow">The metaphor</div>
+    <h2>The agents are a band. You are the conductor.</h2>
+    <p class="lede">Every surface carries the same language and feeling — an instrument panel that happens to sit in a concert hall. Precise and governance-grade, with cinematic warmth where the band performs. Nothing ships without you.</p>
+    <div class="vocab">
+      <div class="vrow"><div class="vterm">The Stage<span>live view</span></div><div class="vdesc">Mission control — watch the players perform in real time.</div></div>
+      <div class="vrow"><div class="vterm">Players<span>the agents</span></div><div class="vdesc">Each carries its own instrument glyph and live activity.</div></div>
+      <div class="vrow"><div class="vterm">The Score<span>evidence ledger</span></div><div class="vdesc">Every finding and decision, written down and auditable.</div></div>
+      <div class="vrow"><div class="vterm">The Conductor<span>approval surface</span></div><div class="vdesc">The human authority — explicit sign-off before any PR.</div></div>
+      <div class="vrow"><div class="vterm">The Master Tape<span>replay / audit</span></div><div class="vdesc">Scrub the whole session back like a recording.</div></div>
+      <div class="vrow"><div class="vterm">A Set<span>one run</span></div><div class="vdesc">A complete performance over a repository, start to finish.</div></div>
+    </div>
+  </section>
+
+  <!-- Paper & surfaces -->
+  <section>
+    <div class="eyebrow">Paper &amp; surfaces</div>
+    <h2>Warm paper, layered with light</h2>
+    <p class="lede">Never stark white. Surfaces rise off the beige base as slightly warmer, lighter panels, separated by hairlines and very soft shadows. Depth comes from light, not lines.</p>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#EFE8DA"></div><div class="meta"><div class="name">Paper</div><div class="hex">#EFE8DA</div><div class="role">App background</div></div></div>
+      <div class="sw"><div class="chip" style="background:#E8E0CE"></div><div class="meta"><div class="name">Paper well</div><div class="hex">#E8E0CE</div><div class="role">Recessed areas, tracks</div></div></div>
+      <div class="sw"><div class="chip" style="background:#F4EFE3"></div><div class="meta"><div class="name">Surface</div><div class="hex">#F4EFE3</div><div class="role">Raised panel</div></div></div>
+      <div class="sw"><div class="chip" style="background:#FAF6EC"></div><div class="meta"><div class="name">Surface 2</div><div class="hex">#FAF6EC</div><div class="role">Cards, the warm light</div></div></div>
+    </div>
+  </section>
+
+  <!-- Ink + accent -->
+  <section>
+    <div class="eyebrow">Ink &amp; the one accent</div>
+    <h2>Warm ink, and a single confident teal</h2>
+    <p class="lede">Text is deep espresso, never pure black. Exactly one accent — a refined jade-teal — means live, healthy, performing. It is the only saturated color used decoratively; everything else earns its color from meaning.</p>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#2B2420"></div><div class="meta"><div class="name">Ink</div><div class="hex">#2B2420</div><div class="role">Primary text, the mark</div></div></div>
+      <div class="sw"><div class="chip" style="background:#6B6053"></div><div class="meta"><div class="name">Ink 2</div><div class="hex">#6B6053</div><div class="role">Secondary text</div></div></div>
+      <div class="sw"><div class="chip" style="background:#968A78"></div><div class="meta"><div class="name">Ink 3</div><div class="hex">#968A78</div><div class="role">Metadata, mono labels</div></div></div>
+      <div class="sw"><div class="chip" style="background:#1F8A7A"></div><div class="meta"><div class="name">Live (accent)</div><div class="hex">#1F8A7A</div><div class="role">Performing · the thread of light</div></div></div>
+    </div>
+  </section>
+
+  <!-- Semantic + severity -->
+  <section>
+    <div class="eyebrow">Semantic states · shape + color</div>
+    <h2>Severity is a shape first, a color second</h2>
+    <p class="lede">No state is ever signalled by color alone. Each carries a distinct glyph so it survives grayscale, color-blindness, and a low-contrast projector.</p>
+    <div class="sev-grid">
+      <div class="sevcard">
+        <div class="top">
+          <span class="sev sev-critical"><svg viewBox="0 0 12 12"><path d="M6 .8 11.2 6 6 11.2.8 6Z" fill="currentColor"/></svg>high severity</span>
+          <svg class="glyphlg" viewBox="0 0 12 12" style="color:var(--severe)"><path d="M6 .8 11.2 6 6 11.2.8 6Z" fill="currentColor"/></svg>
+        </div>
+        <div class="desc">Terracotta + diamond. Exploitable now — hard-coded secret, vulnerable dependency.</div>
+      </div>
+      <div class="sevcard">
+        <div class="top">
+          <span class="sev sev-attention"><svg viewBox="0 0 12 12"><rect x="1.6" y="1.6" width="8.8" height="8.8" rx="1.4" fill="currentColor"/></svg>needs review</span>
+          <svg class="glyphlg" viewBox="0 0 12 12" style="color:var(--attention)"><rect x="1.6" y="1.6" width="8.8" height="8.8" rx="1.4" fill="currentColor"/></svg>
+        </div>
+        <div class="desc">Amber + square. Flagged for the Conductor's attention before action.</div>
+      </div>
+      <div class="sevcard">
+        <div class="top">
+          <span class="sev sev-approved"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5.2" fill="currentColor"/><path d="M3.6 6.2 5.2 7.8 8.4 4.4" fill="none" stroke="#DDE4CE" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>remediated</span>
+          <svg class="glyphlg" viewBox="0 0 12 12" style="color:var(--approved)"><circle cx="6" cy="6" r="5.2" fill="currentColor"/><path d="M3.6 6.2 5.2 7.8 8.4 4.4" fill="none" stroke="#DDE4CE" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="desc">Moss + checked circle. Fixed, approved, and shipped in a PR.</div>
+      </div>
+      <div class="sevcard">
+        <div class="top">
+          <span class="sev sev-archive"><svg viewBox="0 0 12 12"><path d="M1.2 3 10.8 3 6 11Z" fill="currentColor"/></svg>on the tape</span>
+          <svg class="glyphlg" viewBox="0 0 12 12" style="color:var(--archive)"><path d="M1.2 3 10.8 3 6 11Z" fill="currentColor"/></svg>
+        </div>
+        <div class="desc">Sepia + inverted triangle. Superseded ("retakes") kept for audit.</div>
+      </div>
+      <div class="sevcard">
+        <div class="top">
+          <span class="sev sev-live"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="3" fill="currentColor"/><circle cx="6" cy="6" r="5.2" fill="none" stroke="currentColor" stroke-width="1"/></svg>live</span>
+          <svg class="glyphlg" viewBox="0 0 12 12" style="color:var(--live)"><circle cx="6" cy="6" r="3" fill="currentColor"/><circle cx="6" cy="6" r="5.2" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+        </div>
+        <div class="desc">Teal + concentric dot. A player actively performing right now.</div>
+      </div>
+      <div class="sevcard">
+        <div class="top">
+          <span class="sev sev-info"><svg viewBox="0 0 12 12"><rect x="1.4" y="5.2" width="9.2" height="1.6" rx="0.8" fill="currentColor"/></svg>informational</span>
+          <svg class="glyphlg" viewBox="0 0 12 12" style="color:var(--info)"><rect x="1.4" y="5.2" width="9.2" height="1.6" rx="0.8" fill="currentColor"/></svg>
+        </div>
+        <div class="desc">Slate + bar. Context, not a finding — no action required.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Type -->
+  <section>
+    <div class="eyebrow">Typography</div>
+    <h2>A crisp grotesk, and a mono that runs the control plane</h2>
+    <p class="lede">Inter Tight carries the interface; IBM Plex Mono carries identity — agent handles, control IDs, evidence, diffs, ledger entries. The mono is what sells "this is an operator's instrument." Sentence case everywhere, two weights.</p>
+    <div class="type-rows">
+      <div class="trow"><div class="tlabel">display / 34</div><div style="font-size:34px;font-weight:600;letter-spacing:-0.02em;line-height:1.05">The band is mid-set</div></div>
+      <div class="trow"><div class="tlabel">h1 / 26</div><div style="font-size:26px;font-weight:600;letter-spacing:-0.02em">Six players, one conductor</div></div>
+      <div class="trow"><div class="tlabel">h2 / 20</div><div style="font-size:20px;font-weight:600;letter-spacing:-0.01em">Findings mapped to controls</div></div>
+      <div class="trow"><div class="tlabel">body / 14</div><div>Scout detected a fintech stack with elevated data sensitivity and suggested SOC&nbsp;2 and PCI&nbsp;DSS as the governing frameworks for this set.</div></div>
+      <div class="trow"><div class="tlabel">mono / 12.5</div><div class="mono" style="color:var(--ink-2)">@acme/code-scanner&nbsp;&nbsp;·&nbsp;&nbsp;SOC&nbsp;2 CC6.1&nbsp;&nbsp;·&nbsp;&nbsp;auth/session.ts:142&nbsp;&nbsp;·&nbsp;&nbsp;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="412d2e2520322901756f70766f7078">[email&#160;protected]</a></div></div>
+    </div>
+  </section>
+
+  <!-- Components -->
+  <section>
+    <div class="eyebrow">Core components</div>
+    <h2>Built from the same few parts</h2>
+    <p class="lede">Rounded cards, hairline borders, soft low elevation. Restraint over ornament — the band's performance is the only thing allowed to be loud.</p>
+    <div class="gallery">
+      <div class="demo">
+        <h4>Actions</h4>
+        <div class="panelnote">primary · ghost · decline</div>
+        <div class="demo-body" style="margin-top:16px">
+          <button class="btn btn-primary">Approve &amp; open PR</button>
+          <button class="btn btn-ghost">Promote to fix</button>
+          <button class="btn btn-danger">Decline</button>
+        </div>
+      </div>
+      <div class="demo">
+        <h4>Repository field</h4>
+        <div class="panelnote">mono input · live focus</div>
+        <div class="demo-body" style="margin-top:16px">
+          <div class="field">
+            <label>GitHub repository</label>
+            <input value="github.com/acme/ledger-core" />
+          </div>
+          <div class="field">
+            <label>Website (optional)</label>
+            <input value="acme.com" />
+          </div>
+        </div>
+      </div>
+      <div class="demo">
+        <h4>Player card</h4>
+        <div class="panelnote">instrument · handle · live stream</div>
+        <div class="pcard" style="margin-top:16px">
+          <div class="ph">
+            <div class="inst">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v8a3 3 0 0 0 6 0V3"/><path d="M12 14v7"/><path d="M8 21h8"/></svg>
+            </div>
+            <div>
+              <div class="pname">Code Scanner</div>
+              <div class="phandle">@acme/code-scanner</div>
+            </div>
+            <div class="status"><span class="pulse"></span>thinking</div>
+          </div>
+          <div class="stream">
+            <span class="tool">grep</span> "AWS_SECRET" — 3 hits<br />
+            reading auth/session.ts…
+          </div>
+        </div>
+      </div>
+      <div class="demo">
+        <h4>Score entry</h4>
+        <div class="panelnote">the evidence ledger</div>
+        <div class="ledger" style="margin-top:16px">
+          <div class="lentry">
+            <span class="sev sev-critical" style="align-self:start"><svg viewBox="0 0 12 12"><path d="M6 .8 11.2 6 6 11.2.8 6Z" fill="currentColor"/></svg></span>
+            <div><div class="ltitle">Hard-coded AWS secret in source</div><div class="lmeta">auth/session.ts:142 · SOC 2 CC6.1 · found by @acme/code-scanner</div></div>
+          </div>
+          <div class="lentry">
+            <span class="sev sev-attention" style="align-self:start"><svg viewBox="0 0 12 12"><rect x="1.6" y="1.6" width="8.8" height="8.8" rx="1.4" fill="currentColor"/></svg></span>
+            <div><div class="ltitle">Vulnerable dependency: lodash</div><div class="lmeta">package.json · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="15797a7174667d55213b24223b242c">[email&#160;protected]</a> · CC7.1</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="demo">
+        <h4>Set progress</h4>
+        <div class="panelnote">top-bar transport</div>
+        <div class="demo-body" style="margin-top:18px;gap:18px">
+          <div>
+            <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:var(--t-micro);color:var(--ink-3);margin-bottom:7px"><span>set 04 · ledger-core</span><span>62%</span></div>
+            <div style="height:7px;background:var(--inset);border-radius:99px;overflow:hidden"><div style="width:62%;height:100%;background:var(--live);border-radius:99px"></div></div>
+          </div>
+          <div style="display:flex;gap:8px;font-family:var(--mono);font-size:var(--t-micro);color:var(--ink-3)">
+            <span style="color:var(--severe)">◆ 3</span><span style="color:var(--attention)">▣ 5</span><span style="color:var(--approved)">● 8</span>
+          </div>
+        </div>
+      </div>
+      <div class="demo">
+        <h4>Elevation</h4>
+        <div class="panelnote">flat → floating</div>
+        <div class="demo-body" style="margin-top:16px">
+          <div style="height:34px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);box-shadow:var(--shadow-xs)"></div>
+          <div style="height:34px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);box-shadow:var(--shadow)"></div>
+          <div style="height:34px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);box-shadow:var(--shadow-lg)"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Motion -->
+  <section>
+    <div class="eyebrow">Signature motion</div>
+    <h2>Calm, eased, and meaningful</h2>
+    <p class="lede">Motion is reserved for the few moments that build trust: a handoff travelling as a thread of light, a player breathing while it thinks, a finding landing in the Score, the "retake" folding into the archive. Every motion has a reduced-motion fallback.</p>
+    <div class="motion-grid">
+      <div class="mcard">
+        <h4>The thread of light</h4>
+        <p>When one player hands work to another, an eased line travels the path with a soft arrival pulse.</p>
+        <div class="thread-demo">
+          <svg viewBox="0 0 320 54" preserveAspectRatio="none">
+            <path d="M14 27 C 110 27, 210 27, 306 27" fill="none" stroke="var(--line-strong)" stroke-width="1.5" stroke-dasharray="2 5" />
+            <path d="M14 27 C 110 27, 210 27, 306 27" fill="none" stroke="var(--live)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="46 320">
+              <animate attributeName="stroke-dashoffset" from="366" to="0" dur="2.2s" repeatCount="indefinite" />
+            </path>
+            <circle cx="14" cy="27" r="4" fill="var(--live)" />
+            <circle cx="306" cy="27" r="5" fill="none" stroke="var(--live)" stroke-width="2"><animate attributeName="r" values="5;11;5" dur="2.2s" repeatCount="indefinite" /><animate attributeName="opacity" values="0;0.7;0" dur="2.2s" repeatCount="indefinite" /></circle>
+            <circle cx="306" cy="27" r="4" fill="var(--live)" />
+          </svg>
+        </div>
+      </div>
+      <div class="mcard">
+        <h4>The retake</h4>
+        <p>When a fix is approved the old finding folds into the archive but leaves a thin sepia thread to the Master Tape — visibly "kept for audit." This is the signature moment.</p>
+        <div class="thread-demo">
+          <svg viewBox="0 0 320 54" preserveAspectRatio="none">
+            <rect x="14" y="14" width="120" height="26" rx="6" fill="var(--surface-2)" stroke="var(--line)" />
+            <path d="M134 27 C 200 27, 240 40, 300 40" fill="none" stroke="var(--archive)" stroke-width="1.4" stroke-dasharray="3 4" />
+            <path d="M286 31 l16 9 -16 5" fill="var(--archive-tint)" stroke="var(--archive)" stroke-width="1.2" stroke-linejoin="round" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body>
+</html>

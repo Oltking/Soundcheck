@@ -1,0 +1,21 @@
+/* Global base — everything styles via design tokens (design/tokens.css, adopted as app/tokens.css).
+   Do not invent new colors or spacing; extend the token set if needed (attack plan §2). */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans, ui-sans-serif, system-ui, sans-serif);
+}
+
+code,
+pre,
+.mono {
+  font-family: var(--mono, ui-monospace, monospace);
+}

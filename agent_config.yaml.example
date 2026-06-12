@@ -1,0 +1,37 @@
+# Band agent credentials — copy to agent_config.yaml and fill from app.band.ai/agents.
+# One block per registered remote agent. Loaded via:
+#   from thenvoi.config import load_agent_config
+#   agent_id, api_key = load_agent_config("scout")
+# NEVER commit agent_config.yaml.
+
+scout:
+  agent_id: "<uuid>"
+  api_key: "<key>"
+
+bandleader:
+  agent_id: "<uuid>"
+  api_key: "<key>"
+
+code_scanner:
+  agent_id: "<uuid>"
+  api_key: "<key>"
+
+dependencies:
+  agent_id: "<uuid>"
+  api_key: "<key>"
+
+secrets_config:
+  agent_id: "<uuid>"
+  api_key: "<key>"
+
+compliance_mapper:
+  agent_id: "<uuid>"
+  api_key: "<key>"
+
+fixer:
+  agent_id: "<uuid>"
+  api_key: "<key>"
+
+reviewer:
+  agent_id: "<uuid>"
+  api_key: "<key>"

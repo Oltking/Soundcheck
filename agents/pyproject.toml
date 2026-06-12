@@ -1,0 +1,23 @@
+[project]
+name = "soundcheck-agents"
+version = "0.0.1"
+description = "Soundcheck workforce — Band remote agents (Scout, Bandleader, scanners, Compliance Mapper, Fixer, Reviewer)"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    # Band SDK — package is band-sdk, import namespace is `thenvoi` (appendix §0)
+    "band-sdk[langgraph,crewai]",
+    "langchain-openai",         # ChatOpenAI(base_url=...) → AI/ML API + Featherless (appendix §6)
+    "python-dotenv",
+    "httpx",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-asyncio", "ruff"]
+
+[tool.setuptools]
+packages = ["common", "scanners", "fixer"]
+
+[tool.pytest.ini_options]
+markers = ["integration: tests requiring platform connection"]

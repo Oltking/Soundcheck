@@ -1,0 +1,30 @@
+# Secrets — never commit (CLAUDE.md non-negotiable)
+.env
+.env.*
+!.env.example
+agent_config.yaml
+!agent_config.yaml.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Local artifacts
+*.local
+/tmp/
