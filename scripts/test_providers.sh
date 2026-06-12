@@ -20,9 +20,16 @@ probe() {
     return
   fi
   echo "=== [$name] model list (confirm model-id strings) ==="
-  curl -sS --max-time 30 "$base/models" -H "Authorization: Bearer $key" \
-    | python -c "import sys,json; d=json.load(sys.stdin); ids=[m.get('id') for m in d.get('data',[])]; print('models:', len(ids)); print('\n'.join(ids[:10]))" \
-    || { echo "[$name] model list FAILED"; fail=1; }
+  # Featherless's list is ~5MB; allow time and report count + a relevant sample.
+  curl -sS --max-time 180 "$base/models" -H "Authorization: Bearer $key" \
+    | python -c "
+import sys, json
+d = json.load(sys.stdin)
+ids = sorted({m.get('id') for m in d.get('data', [])})
+print('models:', len(ids))
+hits = [i for i in ids if any(k in i.lower() for k in ('claude', 'qwen2.5-coder', 'gpt-5', 'deepseek'))]
+print('\n'.join(hits[:15] or ids[:10]))" \
+    || { echo "[$name] model list FAILED (informational — chat call below is the real gate)"; }
 
   echo "=== [$name] one-line chat completion ($model) ==="
   resp=$(curl -sS --max-time 60 "$base/chat/completions" \
