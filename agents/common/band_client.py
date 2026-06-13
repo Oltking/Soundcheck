@@ -22,7 +22,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 FRONTIER_BASE_URL = "https://api.aimlapi.com/v1"
 FRONTIER_DEFAULT_MODEL = "anthropic/claude-sonnet-4.6"
 OSS_BASE_URL = "https://api.featherless.ai/v1"
-OSS_DEFAULT_MODEL = "Qwen/Qwen2.5-Coder-32B-Instruct"
+# NOT Qwen2.5-Coder-32B: on Featherless it emits tool calls as plain text
+# (verified 2026-06-13) — invisible to Band. 72B does structured tool calls.
+OSS_DEFAULT_MODEL = "Qwen/Qwen2.5-72B-Instruct"
 
 _loaded = False
 

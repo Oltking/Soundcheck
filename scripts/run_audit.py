@@ -17,9 +17,13 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import logging
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+logging.basicConfig(level=logging.WARNING,
+                    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "agents"))
