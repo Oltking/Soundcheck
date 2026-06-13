@@ -64,6 +64,12 @@ WORKFORCE: dict[str, tuple[str, str]] = {
         "Reviews proposed patches with a different model than the Fixer. Writes "
         "ReviewResult memories; requests revisions until the diff is sound.",
     ),
+    "stage_manager": (
+        "Stage Manager",
+        "The production assistant. Relays the Conductor's run instructions into the "
+        "room (kickoffs, run metadata) on behalf of the orchestration backend. "
+        "Does not reason or scan.",
+    ),
 }
 
 CONFIG_PATH = ROOT / "agent_config.yaml"
