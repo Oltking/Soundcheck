@@ -22,11 +22,14 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 FRONTIER_BASE_URL = "https://api.aimlapi.com/v1"
 FRONTIER_DEFAULT_MODEL = "anthropic/claude-sonnet-4.6"
 OSS_BASE_URL = "https://api.featherless.ai/v1"
-# NOT Qwen2.5-Coder-32B: on Featherless it emits tool calls as plain text
-# (verified 2026-06-13) — invisible to Band. 72B does structured tool calls.
-OSS_DEFAULT_MODEL = "Qwen/Qwen2.5-72B-Instruct"
+# Model choice constraints (verified live 2026-06-13):
+# - NOT Qwen2.5-Coder-32B: emits tool calls as plain text — invisible to Band.
+# - NOT Qwen2.5-72B: costs 4/4 concurrency units on this Featherless plan, so any
+#   overlapping call 429s. 14B (proper tool calls, 2 units) allows 2 concurrent.
+OSS_DEFAULT_MODEL = "Qwen/Qwen2.5-14B-Instruct"
 
 _loaded = False
+_OSS_HTTP = None  # shared connection-capped client for the Featherless lane
 
 
 def load_env() -> None:
@@ -73,10 +76,20 @@ def frontier_llm(model: str = FRONTIER_DEFAULT_MODEL, **kwargs):
 def oss_llm(model: str = OSS_DEFAULT_MODEL, **kwargs):
     """ChatOpenAI routed to Featherless — high-volume roles
     (Scout ingest, scanner formatting, status)."""
+    import httpx
     from langchain_openai import ChatOpenAI
 
     load_env()
     kwargs.setdefault("disable_streaming", True)
+    # One shared pool capped at 2 connections: excess requests queue client-side
+    # instead of tripping Featherless's 4-unit concurrency limit (429).
+    global _OSS_HTTP
+    if _OSS_HTTP is None:
+        _OSS_HTTP = httpx.AsyncClient(
+            limits=httpx.Limits(max_connections=2), timeout=120.0
+        )
+    kwargs.setdefault("http_async_client", _OSS_HTTP)
+    kwargs.setdefault("max_retries", 5)  # exponential backoff on residual 429s
     return ChatOpenAI(
         model=model,
         base_url=OSS_BASE_URL,
