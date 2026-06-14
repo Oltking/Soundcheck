@@ -11,7 +11,36 @@ import { api } from "@/lib/api";
 import { INSTRUMENTS, SevChip, SevGlyph, sevKind, Icon } from "@/components/glyphs";
 import type { FindingEntry, TimelineItem } from "@/lib/types";
 
-const STAGE_W = 1100, STAGE_H = 496, CARD_W = 176, CARD_H = 132;
+const CARD_W = 176, CARD_H = 138;
+
+interface Layout {
+  W: number;
+  H: number;
+  positions: { cx: number; cy: number; left: number; top: number }[];
+  podium: { x: number; y: number };
+}
+
+// Concert-hall arc sized to the player count so cards never overlap. The band
+// sits along a shallow arc (Bandleader centred + highest); the conductor's
+// podium sits centred just below the lowest seats.
+function computeLayout(n: number): Layout {
+  const pitch = CARD_W + 34;        // guaranteed horizontal gap between cards
+  const margin = 70;
+  const W = Math.max(1100, margin * 2 + Math.max(0, n - 1) * pitch + CARD_W);
+  const topMax = 150;               // y of the lowest (outer) seats
+  const amplitude = 96;             // how much the centre seats rise
+  const positions = Array.from({ length: n }, (_, i) => {
+    const f = n === 1 ? 0.5 : i / (n - 1);
+    const cx = margin + CARD_W / 2 + f * (Math.max(0, n - 1) * pitch);
+    const dip = 1 - Math.pow((f - 0.5) * 2, 2); // 0 at edges → 1 centre
+    const top = topMax - dip * amplitude;
+    return { cx, cy: top + CARD_H / 2, left: cx - CARD_W / 2, top };
+  });
+  const seatFloor = topMax + CARD_H; // below the lowest cards
+  const podium = { x: W / 2, y: seatFloor + 70 };
+  const H = podium.y + 110;
+  return { W, H, positions, podium };
+}
 
 // Map an agent display name to an instrument glyph + short role.
 function instrumentFor(name: string): { inst: keyof typeof INSTRUMENTS; role: string } {
@@ -27,24 +56,6 @@ function instrumentFor(name: string): { inst: keyof typeof INSTRUMENTS; role: st
   if (n.includes("stage")) return { inst: "conductor", role: "production" };
   return { inst: "scanner", role: "specialist" };
 }
-
-// Arc geometry for N players (Bandleader centred + highest).
-function arcPositions(n: number) {
-  const pos: { cx: number; cy: number; left: number; top: number }[] = [];
-  const margin = 110;
-  const span = STAGE_W - margin * 2;
-  for (let i = 0; i < n; i++) {
-    const f = n === 1 ? 0.5 : i / (n - 1);
-    const cx = margin + f * span;
-    // parabola: highest (smallest y) in the middle
-    const dip = 1 - Math.pow((f - 0.5) * 2, 2); // 0 at edges, 1 centre
-    const top = 196 - dip * 178;
-    pos.push({ cx, cy: top + CARD_H / 2, left: cx - CARD_W / 2, top });
-  }
-  return pos;
-}
-
-const PODIUM = { x: STAGE_W / 2, y: 392 };
 
 interface Player {
   name: string;
@@ -95,21 +106,8 @@ export function StageView({
     return () => { alive = false; clearInterval(iv); };
   }, [roomId, live]);
 
-  // fit the fixed canvas into the wrapper
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const measure = () => {
-      const w = el.clientWidth - 40, h = el.clientHeight - 28;
-      if (w > 0 && h > 0) setScale(Math.max(0.42, Math.min(1, w / STAGE_W, h / STAGE_H)));
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
 
-  const { players, positions, thread } = useMemo(() => {
+  const { players, layout, thread } = useMemo(() => {
     // group events by sender (agents only)
     const bySender = new Map<string, TimelineItem[]>();
     for (const m of timeline) {
@@ -134,7 +132,7 @@ export function StageView({
       return { name, inst, role, stream: streamFromEvents(evs),
         status: recent ? "thinking" : "done" };
     });
-    const positions = arcPositions(players.length);
+    const layout = computeLayout(players.length);
 
     // latest handoff thread: last text message from an agent to the next agent
     const texts = timeline.filter((m) => m.mtype === "text" && m.sender_type !== "User");
@@ -147,7 +145,7 @@ export function StageView({
         .filter((x) => x.i !== fromIdx).sort((a, b) => (a.t < b.t ? 1 : -1));
       if (fromIdx >= 0 && others.length) thread = { from: fromIdx, to: others[0].i };
     }
-    return { players, positions, thread };
+    return { players, layout, thread };
   }, [timeline]);
 
   const tallies = useMemo(() => {
@@ -158,6 +156,20 @@ export function StageView({
     }
     return t;
   }, [findings]);
+
+  // fit the (now dynamically-sized) canvas into the wrapper
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const measure = () => {
+      const w = el.clientWidth - 40, h = el.clientHeight - 24;
+      if (w > 0 && h > 0) setScale(Math.max(0.4, Math.min(1, w / layout.W, h / layout.H)));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [layout.W, layout.H]);
 
   return (
     <div className="stage-region">
@@ -173,15 +185,15 @@ export function StageView({
       <div className="stage-body">
         <div className="stage-wrap" ref={wrapRef}>
           <div className="stage-scale" style={{ transform: `scale(${scale})` }}>
-            <div className="stage-floor" style={{ width: STAGE_W, height: STAGE_H }}>
-              <FloorBg />
-              {thread && positions[thread.from] && positions[thread.to] && (
-                <Threads a={positions[thread.from]} b={positions[thread.to]} />
+            <div className="stage-floor" style={{ width: layout.W, height: layout.H }}>
+              <FloorBg W={layout.W} H={layout.H} podium={layout.podium} />
+              {thread && layout.positions[thread.from] && layout.positions[thread.to] && (
+                <Threads a={layout.positions[thread.from]} b={layout.positions[thread.to]} W={layout.W} H={layout.H} />
               )}
               {players.map((p, i) => (
-                <PlayerCard key={p.name} player={p} pos={positions[i]} />
+                <PlayerCard key={p.name} player={p} pos={layout.positions[i]} />
               ))}
-              <Podium />
+              <Podium podium={layout.podium} />
             </div>
           </div>
           {players.length === 0 && (
@@ -224,41 +236,60 @@ function PlayerCard({ player, pos }: { player: Player; pos: { left: number; top:
   );
 }
 
-function Threads({ a, b }: { a: { cx: number; cy: number }; b: { cx: number; cy: number } }) {
-  const mx = (a.cx + b.cx) / 2, my = Math.min(a.cy, b.cy) - 54;
+function Threads({ a, b, W, H }: {
+  a: { cx: number; cy: number }; b: { cx: number; cy: number }; W: number; H: number;
+}) {
+  const mx = (a.cx + b.cx) / 2, my = Math.min(a.cy, b.cy) - 70;
   const d = `M ${a.cx} ${a.cy} Q ${mx} ${my} ${b.cx} ${b.cy}`;
+  // arrowhead angle at the recipient
+  const ang = Math.atan2(b.cy - my, b.cx - mx);
+  const ah = 9;
+  const a1 = [b.cx - ah * Math.cos(ang - 0.4), b.cy - ah * Math.sin(ang - 0.4)];
+  const a2 = [b.cx - ah * Math.cos(ang + 0.4), b.cy - ah * Math.sin(ang + 0.4)];
   return (
-    <svg className="thread-svg" viewBox={`0 0 ${STAGE_W} ${STAGE_H}`}>
-      <path d={d} fill="none" stroke="var(--line-strong)" strokeWidth="1.4" strokeDasharray="2 6" opacity="0.7" />
-      <path className="travel" d={d} fill="none" stroke="var(--live)" strokeWidth="2.4" strokeLinecap="round" opacity="0.95" />
-      <circle cx={a.cx} cy={a.cy} r="3.5" fill="var(--live)" />
-      <circle className="arrival" cx={b.cx} cy={b.cy} r="4" fill="none" stroke="var(--live)" strokeWidth="2" />
-      <circle cx={b.cx} cy={b.cy} r="3.5" fill="var(--live-bright)" />
+    <svg className="thread-svg" viewBox={`0 0 ${W} ${H}`}>
+      <defs>
+        <filter id="thglow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3" result="b" />
+          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+      {/* faint guide */}
+      <path d={d} fill="none" stroke="var(--line-strong)" strokeWidth="1.4" strokeDasharray="2 7" opacity="0.55" />
+      {/* the bright travelling thread */}
+      <path className="travel" d={d} fill="none" stroke="var(--live-bright)" strokeWidth="3.2"
+        strokeLinecap="round" opacity="0.98" filter="url(#thglow)" />
+      {/* origin pip + arrival ripple + arrowhead */}
+      <circle cx={a.cx} cy={a.cy} r="4.5" fill="var(--live)" />
+      <circle className="arrival" cx={b.cx} cy={b.cy} r="5" fill="none" stroke="var(--live-bright)" strokeWidth="2.4" />
+      <path d={`M ${b.cx} ${b.cy} L ${a1[0]} ${a1[1]} M ${b.cx} ${b.cy} L ${a2[0]} ${a2[1]}`}
+        stroke="var(--live-deep)" strokeWidth="2.4" strokeLinecap="round" fill="none" />
     </svg>
   );
 }
 
-function FloorBg() {
+function FloorBg({ W, H, podium }: { W: number; H: number; podium: { x: number; y: number } }) {
   return (
-    <svg className="floor-bg" viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} preserveAspectRatio="none">
+    <svg className="floor-bg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
       <defs>
         <radialGradient id="footlight" cx="50%" cy="100%" r="62%">
-          <stop offset="0%" stopColor="rgba(31,138,122,0.10)" />
-          <stop offset="55%" stopColor="rgba(31,138,122,0.04)" />
+          <stop offset="0%" stopColor="rgba(31,138,122,0.12)" />
+          <stop offset="55%" stopColor="rgba(31,138,122,0.045)" />
           <stop offset="100%" stopColor="rgba(31,138,122,0)" />
         </radialGradient>
       </defs>
-      <rect x="0" y={STAGE_H - 230} width={STAGE_W} height="230" fill="url(#footlight)" />
-      <ellipse cx={STAGE_W / 2} cy={PODIUM.y + 36} rx="500" ry="78" fill="none" stroke="var(--line)" strokeWidth="1" opacity="0.55" />
-      <ellipse cx={STAGE_W / 2} cy={PODIUM.y + 30} rx="350" ry="56" fill="none" stroke="var(--line)" strokeWidth="1" opacity="0.7" />
-      <ellipse cx={STAGE_W / 2} cy={PODIUM.y + 24} rx="200" ry="36" fill="none" stroke="var(--line-strong)" strokeWidth="1" opacity="0.7" />
+      <rect x="0" y={H - 240} width={W} height="240" fill="url(#footlight)" />
+      {/* concentric stage rings the band stands within */}
+      <ellipse cx={W / 2} cy={podium.y + 30} rx={W * 0.46} ry="74" fill="none" stroke="var(--line)" strokeWidth="1" opacity="0.5" />
+      <ellipse cx={W / 2} cy={podium.y + 26} rx={W * 0.32} ry="54" fill="none" stroke="var(--line)" strokeWidth="1" opacity="0.65" />
+      <ellipse cx={W / 2} cy={podium.y + 22} rx={W * 0.18} ry="34" fill="none" stroke="var(--line-strong)" strokeWidth="1" opacity="0.7" />
     </svg>
   );
 }
 
-function Podium() {
+function Podium({ podium }: { podium: { x: number; y: number } }) {
   return (
-    <div className="podium" style={{ left: PODIUM.x, top: PODIUM.y }}>
+    <div className="podium" style={{ left: podium.x, top: podium.y }}>
       <div className="stand">{INSTRUMENTS.conductor()}</div>
       <div className="plabel"><b>You</b> · the conductor</div>
       <div className="sub">final authority · nothing ships without sign-off</div>

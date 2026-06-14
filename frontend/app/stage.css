@@ -80,14 +80,14 @@
 .podium .sub { font-family: var(--mono); font-size: 9px; color: var(--ink-3); margin-top: 2px; }
 
 /* ---------- The Score rail ---------- */
-.score-rail { width: 374px; flex: none; background: var(--surface);
+.score-rail { width: 338px; flex: none; background: var(--surface);
   border-left: 1px solid var(--line); display: flex; flex-direction: column; }
 .score-head { padding: 16px var(--s5) 13px; border-bottom: 1px solid var(--line); }
 .score-head .row1 { display: flex; align-items: center; justify-content: space-between; }
 .score-head h2 { font-size: var(--t-h3); font-weight: 600; margin: 0; letter-spacing: -0.01em; }
 .score-head .count { font-family: var(--mono); font-size: var(--t-xs); color: var(--ink-3); }
 .score-head .sub { font-family: var(--mono); font-size: var(--t-micro); color: var(--ink-3); margin-top: 3px; }
-.score-list { flex: 1; overflow-y: auto; max-height: 620px; padding: 12px var(--s4) 24px;
+.score-list { flex: 1; overflow-y: auto; max-height: 70vh; padding: 12px var(--s4) 24px;
   display: flex; flex-direction: column; gap: 9px; }
 .finding { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r);
   padding: 11px 12px; position: relative; box-shadow: var(--shadow-xs); }

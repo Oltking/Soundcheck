@@ -22,7 +22,7 @@ export default async function RunLayout({
   } catch { /* BFF down — children will surface it */ }
 
   return (
-    <main className="page" style={{ maxWidth: 1320 }}>
+    <main className="page" style={{ maxWidth: 1460 }}>
       <div className="run-bar">
         <div className="run-bar-left">
           <Link href="/" className="run-back"><Icon name="chevron" /> Runs</Link>
