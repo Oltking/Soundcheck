@@ -18,9 +18,17 @@ from dotenv import load_dotenv
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
-# Model ids confirmed against live provider lists (P0 smoke test, 2026-06-12).
+# AI/ML API model tiers — all verified for reliable structured tool-calling
+# (round-trip probe, 2026-06-14). Spend discipline: use the cheap default for
+# routine reasoning; reserve the heavy model for the few calls that earn it.
 FRONTIER_BASE_URL = "https://api.aimlapi.com/v1"
-FRONTIER_DEFAULT_MODEL = "anthropic/claude-sonnet-4.6"
+FRONTIER_DEFAULT_MODEL = "claude-haiku-4-5-20251001"   # cheap default (Bandleader)
+FRONTIER_HEAVY_MODEL = "anthropic/claude-sonnet-4.6"   # P3 Fixer patch generation
+# Verified cheap alternatives for cross-model variety / consensus (§16.4):
+#   gpt-4o-mini · deepseek-chat · gemini-2.5-flash · gemini-2.5-flash-lite · alibaba/qwen3-32b
+FRONTIER_ALT_MODELS = (
+    "gpt-4o-mini", "deepseek-chat", "gemini-2.5-flash", "alibaba/qwen3-32b",
+)
 OSS_BASE_URL = "https://api.featherless.ai/v1"
 # Model choice constraints (verified live 2026-06-13):
 # - NOT Qwen2.5-Coder-32B: emits tool calls as plain text — invisible to Band.
@@ -53,8 +61,9 @@ def ws_url() -> str:
 
 
 def frontier_llm(model: str = FRONTIER_DEFAULT_MODEL, **kwargs):
-    """ChatOpenAI routed to AI/ML API — reasoning-heavy roles
-    (Bandleader, Compliance Mapper, Fixer=Claude, Reviewer).
+    """ChatOpenAI routed to AI/ML API. Defaults to the CHEAP tier (Haiku) — use
+    this for routine reasoning/orchestration (Bandleader). For patch generation
+    or other quality-critical calls use heavy_llm() instead.
 
     disable_streaming=True: AI/ML API's Anthropic translation repeats the full
     tool name in every streamed chunk; LangChain's chunk merge concatenates them
@@ -71,6 +80,13 @@ def frontier_llm(model: str = FRONTIER_DEFAULT_MODEL, **kwargs):
         api_key=os.environ["AIMLAPI_API_KEY"],
         **kwargs,
     )
+
+
+def heavy_llm(**kwargs):
+    """Frontier AI/ML lane on the HEAVY tier (Sonnet) — reserve for quality-
+    critical calls (e.g. the P3 Fixer generating an actual patch). Costs more,
+    so don't use it for orchestration or formatting."""
+    return frontier_llm(FRONTIER_HEAVY_MODEL, **kwargs)
 
 
 def oss_llm(model: str = OSS_DEFAULT_MODEL, **kwargs):
