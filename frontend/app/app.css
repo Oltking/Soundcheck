@@ -157,3 +157,48 @@
 .v-pass { background: var(--approved-tint); color: var(--approved); border: 1px solid var(--approved-line); }
 .v-revise { background: var(--attention-tint); color: var(--attention); border: 1px solid var(--attention-line); }
 .gov-foot { display: flex; justify-content: flex-end; margin-top: var(--s4); }
+
+/* ---- The Master Tape (replay) ---- */
+.tape { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: var(--s4); box-shadow: var(--shadow-xs); }
+.tape-transport { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s3); }
+.btn-icon-only { padding: 8px; border-radius: var(--r-pill); border: 1px solid var(--line-strong);
+  background: var(--surface-2); cursor: pointer; display: grid; place-items: center; }
+.btn-icon-only svg { width: 16px; height: 16px; }
+.scrub { position: relative; flex: 1; height: 8px; display: flex; align-items: center; }
+.scrub input { position: absolute; inset: 0; width: 100%; margin: 0; appearance: none; background: transparent;
+  cursor: pointer; z-index: 2; }
+.scrub input::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--live); border: 2px solid var(--surface-3); box-shadow: var(--shadow-sm); }
+.scrub::before { content: ""; position: absolute; inset: 0; height: 6px; top: 1px; background: var(--inset);
+  border-radius: 99px; }
+.scrub-fill { position: absolute; left: 0; top: 1px; height: 6px; background: var(--live);
+  border-radius: 99px; pointer-events: none; }
+.tape-pos { font-size: var(--t-xs); color: var(--ink-3); min-width: 56px; text-align: right; }
+
+.tape-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--s4);
+  padding-bottom: var(--s3); border-bottom: 1px solid var(--line); }
+.tape-filters button { font-family: var(--mono); font-size: var(--t-xs); color: var(--ink-2);
+  background: var(--surface-2); border: 1px solid var(--line); padding: 4px 10px; border-radius: var(--r-pill);
+  cursor: pointer; }
+.tape-filters button.on { background: var(--ink); color: var(--on-accent); border-color: var(--ink); }
+
+.tape-track { display: flex; flex-direction: column; gap: var(--s2); max-height: 64vh; overflow-y: auto; }
+.tape-row { display: flex; gap: var(--s3); padding: var(--s3); border-radius: var(--r-sm);
+  background: var(--surface-2); border: 1px solid var(--line-soft); }
+.tape-row.text { border-left: 2px solid var(--live); }
+.tape-row.task { border-left: 2px solid var(--info); }
+.tape-row.thought { border-left: 2px solid var(--line-strong); }
+.tape-row.error { border-left: 2px solid var(--severe); }
+.tape-row.head { box-shadow: var(--glow-live); border-color: var(--live-line); }
+.tr-inst { width: 28px; height: 28px; border-radius: 8px; background: var(--paper-well);
+  border: 1px solid var(--line); display: grid; place-items: center; flex: none; color: var(--ink-2); }
+.tr-inst svg { width: 16px; height: 16px; }
+.tr-body { min-width: 0; flex: 1; }
+.tr-meta { display: flex; align-items: center; gap: 8px; font-size: var(--t-xs); color: var(--ink-3); }
+.tr-meta b { color: var(--ink); font-weight: 600; }
+.tr-type { padding: 1px 7px; border-radius: var(--r-pill); background: var(--paper-well); }
+.tr-type.t-text { background: var(--live-tint); color: var(--live-deep); }
+.tr-time { margin-left: auto; }
+.tr-content { font-size: var(--t-sm); margin-top: 3px; color: var(--ink); line-height: 1.45;
+  white-space: pre-wrap; word-break: break-word; }
