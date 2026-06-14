@@ -13,6 +13,7 @@ once the account has Memory API access — agent code never changes.
 
 from __future__ import annotations
 
+import re
 import uuid
 from typing import Any
 
@@ -22,6 +23,24 @@ from .events import RoomEvents
 from .ledger import Ledger, scrub_secrets
 
 
+_FILE_LINE = re.compile(r"([\w./\\-]+\.\w+):(\d+)")
+
+
+def _dedup_key(kind: str, content: str, references: list[str] | None) -> str:
+    """Collapse near-duplicate writes. For findings the stable signal is the
+    file:line in the evidence (the LLM phrases titles inconsistently); for other
+    kinds it's the normalized content + first reference."""
+    norm = content.lower().replace("\\", "/")
+    m = _FILE_LINE.search(norm)
+    if m:
+        path = m.group(1).lstrip("./")  # drop leading ./ or / from the path
+        sig = f"{path}:{m.group(2)}"  # e.g. app.py:11
+    else:
+        sig = re.sub(r"\s+", " ", norm.strip()).split("\n", 1)[0][:120]
+    ref = (references or [None])[0]
+    return f"{kind}|{sig}|{ref}"
+
+
 class Score:
     """Bound to one agent (api_key) and one run room (chat_id)."""
 
@@ -29,6 +48,7 @@ class Score:
         self._ledger = Ledger(api_key)
         self._events = RoomEvents(api_key, chat_id)
         self._memories_available: bool | None = None  # unknown until first write
+        self._written: dict[str, dict[str, Any]] = {}  # dedup within the run
 
     async def aclose(self) -> None:
         await self._ledger.aclose()
@@ -44,7 +64,14 @@ class Score:
         tags: list[str] | None = None,
         **ledger_kwargs: Any,
     ) -> dict[str, Any]:
-        """Write a ledger entry; returns at least {'id', 'kind', 'via'}."""
+        """Write a ledger entry; returns at least {'id', 'kind', 'via'}.
+        Duplicate writes (same kind + finding/control) collapse to the first one,
+        so an agent that re-scans or re-maps doesn't bloat the Score or burn calls."""
+        dk = _dedup_key(kind, content, references)
+        if dk in self._written:
+            prior = self._written[dk]
+            return {**prior, "deduped": True}
+
         if self._memories_available is not False:
             try:
                 entry = await self._ledger.write(
@@ -54,6 +81,7 @@ class Score:
                 self._memories_available = True
                 entry["via"] = "memory"
                 entry["kind"] = kind
+                self._written[dk] = entry
                 return entry
             except httpx.HTTPStatusError as e:
                 body = e.response.json() if e.response.content else {}
@@ -81,7 +109,9 @@ class Score:
                 "state": "done",
             },
         )
-        return {"id": entry_id, "kind": kind, "via": "event", "status": "active"}
+        result = {"id": entry_id, "kind": kind, "via": "event", "status": "active"}
+        self._written[dk] = result
+        return result
 
     async def supersede(self, entry_id: str, reason: str) -> dict[str, Any]:
         """The retake — never delete. Reason is recorded either way."""
