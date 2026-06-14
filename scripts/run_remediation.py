@@ -46,13 +46,13 @@ WORKSPACE = ROOT / ".workspace"
 
 
 def clone_target(repo_url: str) -> tuple[Path, str]:
-    """Clone the target repo fresh into .workspace. Returns (path, full_name)."""
+    """Clone the target repo fresh into a UNIQUE .workspace dir. Returns
+    (path, full_name). A unique dir avoids Windows rmtree-on-readonly-.git races
+    (shutil can't delete git's read-only objects, which broke re-runs)."""
     WORKSPACE.mkdir(exist_ok=True)
     full = repo_url.rstrip("/").removesuffix(".git").split("github.com/")[-1]
-    dest = WORKSPACE / (full.split("/")[-1] + "-remediation")
-    if dest.exists():
-        import shutil
-        shutil.rmtree(dest, ignore_errors=True)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    dest = WORKSPACE / f"{full.split('/')[-1]}-remediation-{stamp}"
     subprocess.run(["git", "clone", "--depth", "1", repo_url, str(dest)],
                    check=True, capture_output=True, text=True, timeout=300)
     return dest, full
