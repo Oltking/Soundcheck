@@ -50,16 +50,28 @@ def redact(text: str, file: str | None = None, line: int | None = None) -> str:
     return f"secret at {where} (redacted)"
 
 
+# Matches an actual credential ASSIGNMENT (keyword + separator + value), e.g.
+# `password = changeme`, `API_KEY: sk-123`. Does NOT match a finding that merely
+# discusses "a hardcoded password" in prose.
 _SECRETISH = re.compile(
-    r"(?i)(api[_-]?key|secret|token|password|authorization)\s*[:=]\s*\S+"
+    r"(?i)([A-Za-z0-9_]*(?:api[_-]?key|secret|token|password|passwd|authorization|"
+    r"access[_-]?key)[A-Za-z0-9_]*)\s*[:=]\s*['\"]?[^\s'\"]{4,}"
 )
 
 
+def scrub_secrets(text: str) -> str:
+    """Redact any inline credential assignment so a secret value can never be
+    written to the ledger or the room, WITHOUT discarding the finding (CLAUDE.md:
+    redact, don't crash). Returns the text with values replaced."""
+    return _SECRETISH.sub(lambda m: m.group(1) + " (redacted)", text)
+
+
 def assert_no_secret(text: str) -> None:
-    """Guardrail: refuse to write content that looks like a live credential."""
+    """Hard guardrail retained for callers that want strictness. Most paths should
+    use scrub_secrets() instead so a keyword mention never fails a whole message."""
     if _SECRETISH.search(text):
         raise ValueError(
-            "ledger content looks like it contains a credential — redact() it first"
+            "ledger content looks like it contains a credential — scrub_secrets() it first"
         )
 
 
@@ -90,11 +102,12 @@ class Ledger:
         scope: str = "organization",
         subject_id: str | None = None,
     ) -> dict[str, Any]:
-        """Create a ledger entry. Returns the created memory (incl. its id)."""
+        """Create a ledger entry. Returns the created memory (incl. its id).
+        Any inline secret value is scrubbed (never crashes the write)."""
         if kind not in VALID_KINDS:
             raise ValueError(f"unknown ledger kind {kind!r} (valid: {sorted(VALID_KINDS)})")
-        assert_no_secret(content)
-        assert_no_secret(thought)
+        content = scrub_secrets(content)
+        thought = scrub_secrets(thought)
 
         memory: dict[str, Any] = {
             "content": content,

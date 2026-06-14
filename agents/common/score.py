@@ -19,7 +19,7 @@ from typing import Any
 import httpx
 
 from .events import RoomEvents
-from .ledger import Ledger, assert_no_secret
+from .ledger import Ledger, scrub_secrets
 
 
 class Score:
@@ -63,8 +63,8 @@ class Score:
                     raise
 
         # Event fallback — same audit semantics, carried as a Band task event.
-        assert_no_secret(content)
-        assert_no_secret(thought)
+        content = scrub_secrets(content)
+        thought = scrub_secrets(thought)
         entry_id = str(uuid.uuid4())
         await self._events.emit(
             "task",

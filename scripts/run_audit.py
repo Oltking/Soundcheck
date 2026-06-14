@@ -111,23 +111,32 @@ async def main() -> None:
         print(f"[kickoff] sent at {datetime.now(timezone.utc).strftime('%H:%M:%SZ')} — performance underway\n")
 
         # -- live watch ----------------------------------------------------------
+        # Completion = the room goes quiet for QUIET_S after Compliance Mapper has
+        # produced a control mapping (the last stage), OR a hard quiet timeout, OR
+        # the overall timeout. No fragile keyword matching.
+        QUIET_S = 75
         printed: set[str] = set()
-        finale = False
-        for tick in range(args.timeout // 5):
+        last_activity = asyncio.get_event_loop().time()
+        mapper_done = False
+        for _tick in range(args.timeout // 5):
             await asyncio.sleep(5)
             transcript = await merged_transcript(rooms_by_name, chat_id)
             for m in transcript:
                 if m["id"] in printed:
                     continue
                 printed.add(m["id"])
+                last_activity = asyncio.get_event_loop().time()
                 sender = m.get("sender_name") or "?"
                 mtype = m.get("message_type", "?")
                 print(f"  [{mtype:^9}] {sender}: {str(m.get('content'))[:110]}")
-                if (mtype == "text" and m.get("sender_id") == bl["id"]
-                        and owner["name"].split()[0].lower() in str(m.get("content", "")).lower()
-                        and tick > 6):
-                    finale = True
-            if finale:
+                meta = m.get("metadata")
+                if (isinstance(meta, dict) and isinstance(meta.get("ledger"), dict)
+                        and meta["ledger"].get("kind") == "ControlMapping"):
+                    mapper_done = True
+            quiet = asyncio.get_event_loop().time() - last_activity
+            if quiet >= QUIET_S and (mapper_done or len(printed) >= 4):
+                print(f"\n[watch] room quiet for {int(quiet)}s "
+                      f"(compliance mapping {'done' if mapper_done else 'not reached'}) — wrapping up")
                 break
 
         # -- proof ----------------------------------------------------------------

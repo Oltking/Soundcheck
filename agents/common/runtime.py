@@ -13,14 +13,15 @@ from band.adapters import LangGraphAdapter
 from .band_client import create_band_agent
 
 DISCIPLINE = """
-## Coordination discipline (Band)
-- Use thenvoi_send_message ONLY for real handoffs/replies — it must @mention the
-  recipient by name. Plain text output is invisible; always use the tool to speak.
-- Narrate your work with thenvoi_send_event: message_type="thought" for reasoning,
-  and emit a "task" event when your work state changes (starting=in_progress,
-  finished=done, blocked=escalated). Include a short content line.
-- When your assigned work is complete, send ONE message back to whoever assigned
-  it (@mention them) summarizing what you produced (include ledger entry ids).
+## Coordination discipline (Band) — follow EXACTLY
+- Narrate with thenvoi_send_event: message_type="thought" for reasoning; emit a
+  "task" event when your work state changes (in_progress when you start,
+  done when you finish). Keep content to one short line.
+- THE LAST THING YOU DO, ALWAYS: call thenvoi_send_message to report back to
+  whoever assigned you the work, @mentioning them BY NAME (usually "Bandleader").
+  This single closing message is mandatory — the run STALLS if you skip it.
+  One short paragraph: what you produced + the ledger entry ids. Do not end your
+  turn until you have sent it. Plain text output is invisible; only the tool speaks.
 - Stay in your role. Do not do another player's job.
 
 ## Security rules (non-negotiable)
@@ -38,5 +39,8 @@ def build_agent(config_name: str, llm, role_prompt: str, tools: list):
         checkpointer=InMemorySaver(),
         custom_section=role_prompt + DISCIPLINE,
         additional_tools=tools,
+        # Headroom so a worker that makes several scan/ledger tool calls still has
+        # steps left to send its mandatory closing handoff message.
+        recursion_limit=80,
     )
     return create_band_agent(config_name, adapter)
