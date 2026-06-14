@@ -87,10 +87,11 @@ async def main() -> None:
     reviewer_score = Score(agent_credentials("reviewer")[1], chat_id)
 
     agents = {
-        # Fixer on the HEAVY lane (patch quality); Reviewer on a DIFFERENT, cheaper
-        # model — genuine cross-model review.
+        # Fixer on the HEAVY lane (Sonnet — patch quality). Reviewer on gpt-4o-mini:
+        # cheap, reliable tool-calling, and a DIFFERENT VENDOR than the Fixer —
+        # genuine cross-model/cross-vendor review (Anthropic patch, OpenAI review).
         "fixer": fixer_agent.build(heavy_llm(), repo, fixer_score, state),
-        "reviewer": reviewer_agent.build(oss_llm(), reviewer_score, state),
+        "reviewer": reviewer_agent.build(frontier_llm("gpt-4o-mini"), reviewer_score, state),
     }
     tasks = [asyncio.create_task(a.run(), name=n) for n, a in agents.items()]
     await asyncio.sleep(10)
@@ -103,13 +104,14 @@ async def main() -> None:
 
     try:
         # -- dispatch the Fixer with one eligible finding ----------------------
+        # Mention ONLY the Fixer — the Reviewer must not wake until a patch exists
+        # (the Fixer summons it). Mentioning both made the Reviewer review nothing.
         await sm.send_message(
             chat_id,
             f"@Fixer remediate this finding in `{args.file}` (high confidence, low "
             f"risk, eligible for auto-fix): {args.finding} When your patch is ready, "
-            f"hand it to @Reviewer.",
-            mentions=[{"id": fixer_p["id"], "name": "Fixer"},
-                      {"id": reviewer_p["id"], "name": "Reviewer"}],
+            f"hand it to the Reviewer for review.",
+            mentions=[{"id": fixer_p["id"], "name": "Fixer"}],
         )
         print(f"[dispatch] Fixer assigned the finding at {datetime.now(timezone.utc):%H:%M:%SZ}\n")
 
