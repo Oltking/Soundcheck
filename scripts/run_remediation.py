@@ -136,16 +136,17 @@ async def main() -> None:
             return
 
         # -- AUTHORITY GATE: ask the human, wait for approval in the room ------
+        # The human must @mention Stage Manager so the orchestrator (which reads via
+        # Stage Manager, an agent that consumes no LLM tokens) can see the approval.
         await sm.send_message(
             chat_id,
             f"@{owner['name']} the patch on `{proposal['branch']}` passed review. "
-            f"Reply with APPROVE to authorize opening the PR, or anything else to decline. "
-            f"No PR will be opened without your approval.",
-            mentions=[{"id": owner["id"], "name": owner["name"]},
-                      {"id": bl["id"], "name": "Bandleader"}],
+            f"To authorize the PR, reply: @Stage Manager APPROVE  — anything else, or "
+            f"no reply, declines. No PR is opened without your approval.",
+            mentions=[{"id": owner["id"], "name": owner["name"]}],
         )
         print(f"\n[approval] WAITING for your approval in room {chat_id}.")
-        print("           In the Band UI, reply mentioning Bandleader with the word APPROVE.\n")
+        print('           In the Band UI, reply:  @Stage Manager APPROVE\n')
 
         approved = False
         for _ in range(args.timeout // 5):
