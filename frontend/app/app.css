@@ -112,3 +112,13 @@
 .chain .node .nk { font-family: var(--mono); font-size: var(--t-xs); color: var(--live-deep); }
 .chain .node .nc { font-size: var(--t-sm); }
 .chain .node .nt { font-size: var(--t-xs); color: var(--ink-3); font-style: italic; }
+
+/* run switcher chips */
+.run-switch { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--s3); }
+.run-switch a {
+  font-family: var(--mono); font-size: var(--t-xs); text-decoration: none;
+  color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--line);
+  padding: 4px 10px; border-radius: var(--r-pill);
+}
+.run-switch a:hover { background: var(--surface-3); }
+.run-switch a.on { background: var(--ink); color: var(--on-accent); border-color: var(--ink); }

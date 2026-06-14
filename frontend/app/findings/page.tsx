@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { Icon, SevChip, sevKind } from "@/components/glyphs";
 import type { FindingEntry, Run } from "@/lib/types";
@@ -22,7 +23,9 @@ export default async function Findings({
     return <main className="page"><div className="error-banner">Backend (BFF) unreachable on :8000.</div></main>;
   }
 
-  const roomId = run || runs[0]?.room_id;
+  // Default to the newest run that actually has findings (the newest run may be
+  // a remediation room with patches but zero findings).
+  const roomId = run || runs.find((r) => r.finding_count > 0)?.room_id || runs[0]?.room_id;
   let findings: FindingEntry[] = [];
   if (roomId) {
     try {
@@ -44,6 +47,16 @@ export default async function Findings({
         <div className="sub">
           {roomId ? <>Run <span className="mono">{roomId.slice(0, 8)}</span> · {findings.length} findings, each with its reasoning, evidence, and control mapping.</> : "No run selected."}
         </div>
+        {runs.filter((r) => r.finding_count > 0).length > 1 && (
+          <div className="run-switch">
+            {runs.filter((r) => r.finding_count > 0).map((r) => (
+              <Link key={r.room_id} href={`/findings?run=${r.room_id}`}
+                    className={r.room_id === roomId ? "on" : ""}>
+                {r.room_id.slice(0, 8)} · {r.finding_count}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {findings.length === 0 && (
