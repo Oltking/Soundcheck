@@ -62,6 +62,9 @@ async def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--target", default=str(ROOT / "fixtures" / "vuln-app"))
     ap.add_argument("--timeout", type=int, default=600)
+    ap.add_argument("--room-id", default=None,
+                    help="Reuse an existing room instead of creating a new one "
+                         "(keeps the Band UI clean across repeated test runs).")
     args = ap.parse_args()
 
     repo = prepare_workspace(args.target)
@@ -77,9 +80,14 @@ async def main() -> None:
 
     # The room id is needed by the Score (event fallback) before the room exists,
     # so create it now but DON'T add anyone yet — agents start first, then join
-    # via the live room_added event.
-    chat = await sm.create_chat()
-    chat_id = chat["id"]
+    # via the live room_added event. --room-id reuses one room across test runs
+    # so repeated runs don't accumulate rooms in the Band UI.
+    if args.room_id:
+        chat_id = args.room_id
+        print(f"[setup] reusing room {chat_id}")
+    else:
+        chat = await sm.create_chat()
+        chat_id = chat["id"]
 
     # -- build + start the band (before anyone joins the room) ----------------
     def score_for(name: str) -> Score:
@@ -92,7 +100,10 @@ async def main() -> None:
         "code_scanner": code_scanner.build(oss_llm(), repo, score_for("code_scanner")),
         "dependencies": dependencies.build(oss_llm(), repo, score_for("dependencies")),
         "secrets_config": secrets_config.build(oss_llm(), repo, score_for("secrets_config")),
-        "compliance_mapper": compliance_mapper.build(frontier_llm(), score_for("compliance_mapper")),
+        # Compliance Mapper moved to the OSS lane (structured finding->control
+        # mapping doesn't need a frontier model) — leaves Bandleader as the only
+        # frontier-lane agent, sharply cutting AI/ML credit use.
+        "compliance_mapper": compliance_mapper.build(oss_llm(), score_for("compliance_mapper")),
     }
     tasks = [asyncio.create_task(a.run(), name=n) for n, a in agents.items()]
     await asyncio.sleep(10)  # let every WebSocket connect + subscribe to agent_rooms

@@ -120,10 +120,14 @@ def create_band_agent(config_name: str, adapter, **kwargs):
         await agent.run()
     """
     from band import Agent
-    from band.runtime.types import AgentConfig
+    from band.runtime.types import AgentConfig, SessionConfig
 
     agent_id, api_key = agent_credentials(config_name)
     kwargs.setdefault("config", AgentConfig(auto_subscribe_existing_rooms=False))
+    # Cost control: cap how much room history is resent to the model each turn.
+    # A busy audit room (80+ findings) would otherwise inflate every frontier call
+    # — the main driver of token spend. 30 messages keeps recent context cheaply.
+    kwargs.setdefault("session_config", SessionConfig(max_context_messages=30))
     return Agent.create(
         adapter=adapter,
         agent_id=agent_id,
