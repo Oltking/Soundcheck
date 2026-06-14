@@ -9,6 +9,8 @@ const LINKS = [
   { href: "/findings", label: "Findings" },
   { href: "/conductor", label: "The Conductor" },
   { href: "/tape", label: "Master Tape" },
+  { href: "/posture", label: "Posture" },
+  { href: "/roster", label: "Roster" },
 ];
 
 export function Nav() {
