@@ -46,3 +46,7 @@ audit_stderr.log
 
 # BFF read-cache (disposable; Band is source of record)
 backend/soundcheck.db
+
+# dev server logs
+bff.log
+frontend.log

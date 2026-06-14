@@ -1,0 +1,114 @@
+/* Soundcheck app shell + data-screen styles. Everything references design tokens
+   (tokens.css). Concert-hall-in-warm-daylight; severity is shape+colour. */
+
+.app-shell { min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ---- top nav ---- */
+.nav {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: var(--s5);
+  padding: var(--s3) var(--s5);
+  background: color-mix(in srgb, var(--surface), transparent 8%);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.nav .brand { display: flex; align-items: center; gap: var(--s2); font-weight: 600; }
+.nav .brand .mark {
+  width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+  background: var(--live-tint); border: 1px solid var(--live-line);
+}
+.nav .brand b { color: var(--live-deep); }
+.nav .wm { font-size: var(--t-h3); letter-spacing: -0.01em; }
+.nav .links { display: flex; gap: var(--s1); margin-left: var(--s4); }
+.nav .links a {
+  padding: 6px 12px; border-radius: var(--r-pill); color: var(--ink-2);
+  text-decoration: none; font-size: var(--t-sm); font-weight: 500;
+}
+.nav .links a:hover { background: var(--paper-well); color: var(--ink); }
+.nav .links a.on { background: var(--ink); color: var(--on-accent); }
+.nav .spacer { flex: 1; }
+.nav .cond-chip {
+  display: flex; align-items: center; gap: var(--s2); font-size: var(--t-sm);
+  color: var(--ink-2);
+}
+.nav .cond-av {
+  width: 28px; height: 28px; border-radius: var(--r-pill); display: grid; place-items: center;
+  background: var(--ink); color: var(--on-accent); font-size: var(--t-xs); font-weight: 600;
+}
+
+/* ---- page frame ---- */
+.page { flex: 1; max-width: 1180px; width: 100%; margin: 0 auto; padding: var(--s6) var(--s5); }
+.page-head { margin-bottom: var(--s5); }
+.page-head h1 { font-size: var(--t-h1); margin: 0 0 4px; letter-spacing: -0.02em; }
+.page-head .sub { color: var(--ink-3); font-size: var(--t-sm); }
+.mono { font-family: var(--mono); }
+.tnum { font-variant-numeric: tabular-nums; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
+  border-radius: var(--r-sm); border: 1px solid var(--line-strong); background: var(--surface-2);
+  color: var(--ink); font: inherit; font-size: var(--t-sm); font-weight: 500; cursor: pointer;
+}
+.btn svg { width: 15px; height: 15px; }
+.btn:hover { background: var(--surface-3); }
+.btn-primary { background: var(--live); color: var(--on-accent); border-color: var(--live-deep); }
+.btn-primary:hover { background: var(--live-deep); }
+
+/* ---- run cards (home) ---- */
+.run-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--s4); }
+.run-card {
+  display: block; text-decoration: none; color: inherit;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: var(--s4); box-shadow: var(--shadow-sm); transition: box-shadow .2s, transform .2s;
+}
+.run-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+.run-card .rc-id { font-family: var(--mono); font-size: var(--t-xs); color: var(--ink-3); }
+.run-card .rc-when { font-size: var(--t-xs); color: var(--ink-3); }
+.run-card .rc-row { display: flex; justify-content: space-between; align-items: baseline; }
+.run-card .rc-stats { display: flex; gap: var(--s4); margin-top: var(--s3); }
+.run-card .stat { display: flex; flex-direction: column; }
+.run-card .stat b { font-size: var(--t-h2); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.run-card .stat span { font-size: var(--t-xs); color: var(--ink-3); }
+
+/* ---- severity chip (shape + colour) ---- */
+.sev { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: var(--r-pill);
+  font-size: var(--t-xs); font-weight: 600; }
+.sev svg { width: 11px; height: 11px; }
+.sev-critical { background: var(--severe-tint); color: var(--severe); border: 1px solid var(--severe-line); }
+.sev-attention { background: var(--attention-tint); color: var(--attention); border: 1px solid var(--attention-line); }
+.sev-approved { background: var(--approved-tint); color: var(--approved); border: 1px solid var(--approved-line); }
+.sev-archive { background: var(--archive-tint); color: var(--archive); border: 1px solid var(--archive-line); }
+.sev-info { background: var(--info-tint); color: var(--info); }
+.sev-live { background: var(--live-tint); color: var(--live-deep); border: 1px solid var(--live-line); }
+
+/* ---- findings list ---- */
+.finding-card {
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r);
+  padding: var(--s4); margin-bottom: var(--s3); box-shadow: var(--shadow-xs);
+}
+.finding-card.crit { border-left: 3px solid var(--severe); }
+.finding-card.att { border-left: 3px solid var(--attention); }
+.finding-card.inf { border-left: 3px solid var(--info); }
+.finding-card .fc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s3); }
+.finding-card .fc-title { font-weight: 600; font-size: var(--t-h3); }
+.finding-card .fc-thought {
+  margin-top: 6px; color: var(--ink-2); font-size: var(--t-sm); font-style: italic;
+  border-left: 2px solid var(--line); padding-left: var(--s3);
+}
+.finding-card .fc-meta { margin-top: var(--s3); display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4);
+  font-size: var(--t-xs); color: var(--ink-3); align-items: center; }
+.finding-card .ctrl { font-family: var(--mono); background: var(--paper-well); padding: 2px 7px;
+  border-radius: var(--r-xs); color: var(--ink-2); }
+.finding-card .by { font-family: var(--mono); }
+
+.empty { text-align: center; color: var(--ink-3); padding: var(--s8) var(--s4); }
+.empty svg { width: 36px; height: 36px; opacity: .5; }
+.error-banner { background: var(--severe-tint); border: 1px solid var(--severe-line); color: var(--severe);
+  padding: var(--s3) var(--s4); border-radius: var(--r-sm); font-size: var(--t-sm); }
+
+/* ---- provenance chain ---- */
+.chain { margin-top: var(--s3); }
+.chain .node { border-left: 2px solid var(--line-strong); padding-left: var(--s3); margin-left: 6px; }
+.chain .node .nk { font-family: var(--mono); font-size: var(--t-xs); color: var(--live-deep); }
+.chain .node .nc { font-size: var(--t-sm); }
+.chain .node .nt { font-size: var(--t-xs); color: var(--ink-3); font-style: italic; }
