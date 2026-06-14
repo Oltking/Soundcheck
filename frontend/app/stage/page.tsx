@@ -1,49 +1,46 @@
+import "../stage.css";
 import { api } from "@/lib/api";
-import type { Run, TimelineItem } from "@/lib/types";
+import { StageView } from "@/components/stage-view";
+import type { FindingEntry, Run, TimelineItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-// Placeholder Stage — the full animated concert-hall Stage is built next.
-// For now it proves the live timeline pipe (messages + events from Band).
 export default async function Stage({
   searchParams,
 }: {
-  searchParams: Promise<{ run?: string }>;
+  searchParams: Promise<{ run?: string; live?: string }>;
 }) {
-  const { run } = await searchParams;
+  const { run, live } = await searchParams;
   let runs: Run[] = [];
   try {
     runs = (await api.listRuns()).runs;
   } catch {
     return <main className="page"><div className="error-banner">Backend (BFF) unreachable on :8000.</div></main>;
   }
-  const roomId = run || runs[0]?.room_id;
-  let timeline: TimelineItem[] = [];
-  if (roomId) {
-    try { timeline = (await api.timeline(roomId)).timeline; } catch { /* not cached */ }
+  const roomId = run || runs.find((r) => r.finding_count > 0)?.room_id || runs[0]?.room_id;
+
+  if (!roomId) {
+    return (
+      <main className="page">
+        <div className="page-head"><h1>The Stage</h1><div className="sub">No runs yet.</div></div>
+      </main>
+    );
   }
 
+  // Fetch initial state server-side so the Stage renders instantly (then the
+  // client polls only when ?live=1).
+  let timeline: TimelineItem[] = [];
+  let findings: FindingEntry[] = [];
+  try {
+    [timeline, findings] = await Promise.all([
+      api.timeline(roomId).then((r) => r.timeline),
+      api.findings(roomId).then((r) => r.findings),
+    ]);
+  } catch { /* not cached */ }
+
   return (
-    <main className="page">
-      <div className="page-head">
-        <h1>The Stage</h1>
-        <div className="sub">
-          {roomId ? <>Live conversation for run <span className="mono">{roomId.slice(0, 8)}</span> — {timeline.length} messages & events through Band. (Animated stage view coming next.)</> : "No run."}
-        </div>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--s2)" }}>
-        {timeline.map((m) => (
-          <div key={m.id} style={{
-            background: "var(--surface-2)", border: "1px solid var(--line)",
-            borderRadius: "var(--r-sm)", padding: "var(--s3)", fontSize: "var(--t-sm)",
-          }}>
-            <span className="mono" style={{ color: "var(--ink-3)", fontSize: "var(--t-xs)" }}>
-              [{m.mtype}] {m.sender}
-            </span>
-            <div>{(m.content || "").slice(0, 200)}</div>
-          </div>
-        ))}
-      </div>
+    <main className="page" style={{ maxWidth: 1320 }}>
+      <StageView roomId={roomId} initialTimeline={timeline} initialFindings={findings} live={live === "1"} />
     </main>
   );
 }
