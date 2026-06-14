@@ -43,3 +43,6 @@ Thumbs.db
 audit_run.log
 audit_stderr.log
 .workspace/
+
+# BFF read-cache (disposable; Band is source of record)
+backend/soundcheck.db

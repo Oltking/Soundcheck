@@ -8,10 +8,11 @@ dependencies = [
     "fastapi",
     "uvicorn[standard]",
     "httpx",
-    "websockets",
     "python-dotenv",
     "pydantic",
-    # P4: "sqlalchemy", "alembic", "asyncpg", "PyGithub"
+    "pyyaml",          # read agent keys to reconstruct rooms via the Agent API
+    # Projection uses stdlib sqlite3 (no Docker/Postgres dependency on this host).
+    # PyGithub is used by the agents/fixer git-PR service, not the BFF.
 ]
 
 [project.optional-dependencies]

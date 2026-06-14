@@ -1,18 +1,163 @@
-"""Soundcheck BFF (FastAPI).
+"""Soundcheck BFF (FastAPI) — the read projection + audit-package gateway (spec §7).
 
-P0: health endpoint only.
-P4 adds: run orchestration (create room, add agents, kickoff @Bandleader message),
-GitHub webhook receiver, Human-API/WS bridge, ledger projection, audit-package export.
+Band is the system of record; this service only READS Band (via the Agent API,
+since the Human API is Enterprise-gated) and serves a fast, replayable view to
+the frontend. It never coordinates agents (spec §17.2).
 
-Band is the system of record — this service is a read projection + command gateway,
-never a coordination channel between agents (spec §17.2).
+Endpoints:
+  GET  /health
+  POST /runs/refresh                  re-project all known rooms from Band
+  GET  /runs                          list runs (from cache)
+  POST /runs/{room_id}/refresh        re-project one room
+  GET  /runs/{room_id}                run detail: counts + ledger grouped by kind
+  GET  /runs/{room_id}/timeline       full message/event timeline
+  GET  /runs/{room_id}/findings       findings + their control mappings
+  GET  /runs/{room_id}/chain/{id}     provenance chain for a ledger entry
+  GET  /runs/{room_id}/audit-package  signed-style JSON export (the deliverable)
 """
 
-from fastapi import FastAPI
+from __future__ import annotations
 
-app = FastAPI(title="Soundcheck BFF", version="0.0.1")
+import json
+import subprocess
+import sys
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from pathlib import Path
+
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+load_dotenv(REPO_ROOT / ".env")
+
+from . import db, projection  # noqa: E402
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    db.init_db()
+    yield
+
+
+app = FastAPI(title="Soundcheck BFF", version="0.4.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware, allow_origins=["http://localhost:3000"],
+    allow_methods=["*"], allow_headers=["*"],
+)
 
 
 @app.get("/health")
 async def health() -> dict:
     return {"status": "ok", "service": "soundcheck-backend"}
+
+
+# -- run orchestration (the Connect screen starts a run) -------------------
+
+@app.post("/runs/start")
+async def start_run(target: str | None = None) -> dict:
+    """Launch an audit run (detached subprocess). It creates its own Band room;
+    the frontend then polls POST /runs/refresh to discover and project it.
+    NOTE: a real run spends model tokens — this is an explicit user action."""
+    cmd = [sys.executable, str(REPO_ROOT / "scripts" / "run_audit.py")]
+    if target:
+        cmd += ["--target", target]
+    subprocess.Popen(cmd, cwd=str(REPO_ROOT),
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return {"status": "started", "note": "poll POST /runs/refresh to discover the new room"}
+
+
+# -- projection refresh ----------------------------------------------------
+
+@app.post("/runs/refresh")
+async def refresh_all(limit: int = 50) -> dict:
+    runs = await projection.project_all_rooms(limit=limit)
+    return {"projected": len(runs), "runs": [r["room_id"] for r in runs]}
+
+
+@app.post("/runs/{room_id}/refresh")
+async def refresh_one(room_id: str) -> dict:
+    return await projection.project_room(room_id)
+
+
+# -- reads from the cache --------------------------------------------------
+
+def _rows(sql: str, *params) -> list[dict]:
+    conn = db.connect()
+    try:
+        return [dict(r) for r in conn.execute(sql, params)]
+    finally:
+        conn.close()
+
+
+@app.get("/runs")
+async def list_runs() -> dict:
+    return {"runs": _rows("SELECT * FROM runs ORDER BY created_at DESC")}
+
+
+@app.get("/runs/{room_id}")
+async def run_detail(room_id: str) -> dict:
+    runs = _rows("SELECT * FROM runs WHERE room_id=?", room_id)
+    if not runs:
+        raise HTTPException(404, "run not in cache — POST /runs/{id}/refresh first")
+    ledger = _rows("SELECT * FROM ledger WHERE room_id=? ORDER BY created_at", room_id)
+    by_kind: dict[str, list] = {}
+    for e in ledger:
+        e["tags"] = json.loads(e["tags"] or "[]")
+        e["refs"] = json.loads(e["refs"] or "[]")
+        by_kind.setdefault(e["kind"], []).append(e)
+    return {"run": runs[0], "ledger_by_kind": by_kind}
+
+
+@app.get("/runs/{room_id}/timeline")
+async def run_timeline(room_id: str) -> dict:
+    return {"timeline": _rows(
+        "SELECT * FROM timeline WHERE room_id=? ORDER BY created_at", room_id)}
+
+
+@app.get("/runs/{room_id}/findings")
+async def run_findings(room_id: str) -> dict:
+    ledger = _rows("SELECT * FROM ledger WHERE room_id=?", room_id)
+    for e in ledger:
+        e["tags"] = json.loads(e["tags"] or "[]")
+        e["refs"] = json.loads(e["refs"] or "[]")
+    findings = [e for e in ledger if e["kind"] == "Finding"]
+    controls = [e for e in ledger if e["kind"] == "ControlMapping"]
+    # attach the control mappings that reference each finding
+    for f in findings:
+        f["controls"] = [c for c in controls if f["id"] in c["refs"]]
+        f["severity"] = next((t.split(":", 1)[1] for t in f["tags"]
+                              if t.startswith("severity:")), "unknown")
+    return {"findings": findings}
+
+
+@app.get("/runs/{room_id}/chain/{entry_id}")
+async def run_chain(room_id: str, entry_id: str) -> dict:
+    chain = projection.provenance_chain(room_id, entry_id)
+    if not chain:
+        raise HTTPException(404, "entry not found in cache for this room")
+    return {"chain": chain}
+
+
+@app.get("/runs/{room_id}/audit-package")
+async def audit_package(room_id: str) -> dict:
+    """Provenance-complete export assembled solely from the Band trail (spec §16.5).
+    Every finding, its control mappings, and the patch->review->approval chain."""
+    runs = _rows("SELECT * FROM runs WHERE room_id=?", room_id)
+    if not runs:
+        raise HTTPException(404, "run not in cache — refresh first")
+    ledger = _rows("SELECT * FROM ledger WHERE room_id=? ORDER BY created_at", room_id)
+    for e in ledger:
+        e["tags"] = json.loads(e["tags"] or "[]")
+        e["refs"] = json.loads(e["refs"] or "[]")
+    return {
+        "audit_package_version": "1.0",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source": "Band provenance ledger (system of record)",
+        "room_id": room_id,
+        "run": runs[0],
+        "ledger": ledger,
+        "note": "Every entry carries its agent's reasoning (thought) and reference "
+                "chain. Human approvals are recorded as Approval entries.",
+    }
