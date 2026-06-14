@@ -109,15 +109,21 @@ def agent_credentials(config_name: str) -> tuple[str, str]:
 def create_band_agent(config_name: str, adapter, **kwargs):
     """Create a Band Agent (SDK) for a named credential block.
 
+    auto_subscribe_existing_rooms=False (run isolation): on startup the agent does
+    NOT re-drain every room it was ever a participant in — that resync storm grew
+    with each run and starved the WebSocket heartbeats (run 4, 2026-06-14). Rooms
+    joined while the agent is running still subscribe via the live room_added event,
+    so the orchestrator starts agents BEFORE adding them to the run room.
+
     Usage:
-        adapter = LangGraphAdapter(llm=frontier_llm(), checkpointer=InMemorySaver(),
-                                   custom_section=..., additional_tools=[...])
         agent = create_band_agent("scout", adapter)
         await agent.run()
     """
     from band import Agent
+    from band.runtime.types import AgentConfig
 
     agent_id, api_key = agent_credentials(config_name)
+    kwargs.setdefault("config", AgentConfig(auto_subscribe_existing_rooms=False))
     return Agent.create(
         adapter=adapter,
         agent_id=agent_id,

@@ -67,19 +67,21 @@ async def main() -> None:
     repo = prepare_workspace(args.target)
     print(f"[setup] target repo: {repo}")
 
-    # -- room: Stage Manager creates, adds Bandleader + the human ------------
+    # Resolve identities up front (no room yet — run isolation needs agents
+    # running BEFORE they are added to the run room; see create_band_agent).
     sm_id, sm_key = agent_credentials("stage_manager")
     sm = AgentRooms(sm_key)
-    chat = await sm.create_chat()
-    chat_id = chat["id"]
     peers = await sm.peers(page_size=50)
     owner = next(p for p in peers if p.get("type") == "User")
     bl = next(p for p in peers if p.get("name") == "Bandleader")
-    await sm.add_participant(chat_id, bl["id"])
-    await sm.add_participant(chat_id, owner["id"])
-    print(f"[room] {chat_id} created — Bandleader + {owner['name']} in. Watch live at app.band.ai")
 
-    # -- build the band -------------------------------------------------------
+    # The room id is needed by the Score (event fallback) before the room exists,
+    # so create it now but DON'T add anyone yet — agents start first, then join
+    # via the live room_added event.
+    chat = await sm.create_chat()
+    chat_id = chat["id"]
+
+    # -- build + start the band (before anyone joins the room) ----------------
     def score_for(name: str) -> Score:
         _, key = agent_credentials(name)
         return Score(key, chat_id)
@@ -93,8 +95,15 @@ async def main() -> None:
         "compliance_mapper": compliance_mapper.build(frontier_llm(), score_for("compliance_mapper")),
     }
     tasks = [asyncio.create_task(a.run(), name=n) for n, a in agents.items()]
-    await asyncio.sleep(8)
+    await asyncio.sleep(10)  # let every WebSocket connect + subscribe to agent_rooms
     print(f"[band] {len(agents)} players connected over WebSocket")
+
+    # Now add Bandleader + the human — agents are running, so they subscribe to
+    # this new room via room_added (not the startup sweep).
+    await sm.add_participant(chat_id, bl["id"])
+    await sm.add_participant(chat_id, owner["id"])
+    await asyncio.sleep(3)
+    print(f"[room] {chat_id} — Bandleader + {owner['name']} joined. Watch live at app.band.ai")
 
     rooms_by_name = {n: AgentRooms(agent_credentials(n)[1]) for n in PLAYERS}
 
