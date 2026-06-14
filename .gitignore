@@ -38,3 +38,8 @@ Thumbs.db
 # Local artifacts
 *.local
 /tmp/
+
+# Local run artifacts
+audit_run.log
+audit_stderr.log
+.workspace/
