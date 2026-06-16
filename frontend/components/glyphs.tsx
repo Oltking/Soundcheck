@@ -25,7 +25,7 @@ export function SevGlyph({ kind }: { kind: SevKind }) {
   switch (kind) {
     case "critical": return (<svg viewBox="0 0 12 12"><path d="M6 .8 11.2 6 6 11.2.8 6Z" fill="currentColor" /></svg>);
     case "attention": return (<svg viewBox="0 0 12 12"><rect x="1.6" y="1.6" width="8.8" height="8.8" rx="1.4" fill="currentColor" /></svg>);
-    case "approved": return (<svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5.2" fill="currentColor" /><path d="M3.6 6.2 5.2 7.8 8.4 4.4" fill="none" stroke="var(--approved-tint)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>);
+    case "approved": return (<svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="5.2" fill="currentColor" /><path d="M3.6 6.2 5.2 7.8 8.4 4.4" fill="none" stroke="var(--paper)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>);
     case "archive": return (<svg viewBox="0 0 12 12"><path d="M1.2 3 10.8 3 6 11Z" fill="currentColor" /></svg>);
     case "live": return (<svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="3" fill="currentColor" /><circle cx="6" cy="6" r="5.2" fill="none" stroke="currentColor" strokeWidth="1" /></svg>);
     default: return (<svg viewBox="0 0 12 12"><rect x="1.4" y="5.2" width="9.2" height="1.6" rx="0.8" fill="currentColor" /></svg>);

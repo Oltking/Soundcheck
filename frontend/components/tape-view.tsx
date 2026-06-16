@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { INSTRUMENTS, Icon, SevGlyph } from "@/components/glyphs";
+import { MentionText } from "@/components/mention-text";
 import type { TimelineItem } from "@/lib/types";
 
 const TYPE_LABEL: Record<string, string> = {
@@ -52,11 +53,12 @@ export function TapeView({ timeline }: { timeline: TimelineItem[] }) {
   return (
     <div className="tape">
       <div className="tape-transport">
-        <button className="btn btn-icon-only" onClick={() => (head >= items.length ? restart() : setPlaying((p) => !p))}>
+        <button className="btn btn-icon-only" aria-label={playing ? "Pause replay" : "Play replay"}
+          onClick={() => (head >= items.length ? restart() : setPlaying((p) => !p))}>
           <Icon name={playing ? "pause" : "play"} />
         </button>
         <div className="scrub">
-          <input type="range" min={0} max={items.length} value={head}
+          <input type="range" min={0} max={items.length} value={head} aria-label="Replay position"
             onChange={(e) => { setPlaying(false); setHead(Number(e.target.value)); }} />
           <div className="scrub-fill" style={{ width: `${pct}%` }} />
         </div>
@@ -82,11 +84,17 @@ export function TapeView({ timeline }: { timeline: TimelineItem[] }) {
               <div className="tr-body">
                 <div className="tr-meta mono">
                   <b>{m.sender}</b>
+                  {m.mentions && m.mentions.length > 0 && (
+                    <span className="tr-handoff">
+                      <Icon name="handoff" />
+                      {m.mentions.map((name) => <span key={name} className="mention">@{name}</span>)}
+                    </span>
+                  )}
                   <span className={`tr-type t-${m.mtype}`}>{TYPE_LABEL[m.mtype] || m.mtype}</span>
                   <span className="tr-time">{m.created_at ? new Date(m.created_at).toLocaleTimeString() : ""}</span>
                 </div>
                 <div className="tr-content">
-                  {(m.content || "").replace(/@\[\[[^\]]+\]\]/g, "").trim().slice(0, 240)}
+                  <MentionText text={(m.content || "").trim()} mentions={m.mentions} />
                 </div>
               </div>
             </div>

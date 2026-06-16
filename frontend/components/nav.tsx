@@ -3,26 +3,27 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// Global nav = cross-run views only. Per-run screens (Stage/Findings/Conductor/
-// Tape) live under a run's own tab bar so your run context never gets lost.
+// Global app nav = cross-run views only. It does NOT render on the marketing
+// site ("/") — that page has its own header. Per-run screens live under a run's
+// own tab bar so run context never gets lost.
 const LINKS = [
-  { href: "/", label: "Runs" },
+  { href: "/app", label: "Runs" },
   { href: "/posture", label: "Posture" },
   { href: "/roster", label: "Roster" },
 ];
 
 export function Nav() {
   const path = usePathname();
+  if (path === "/") return null; // marketing site owns its own chrome
+
   const active = (href: string) =>
-    href === "/" ? path === "/" || path.startsWith("/run") : path.startsWith(href);
+    href === "/app" ? path === "/app" || path.startsWith("/run") : path.startsWith(href);
+
   return (
     <nav className="nav">
-      <Link href="/" className="brand">
-        <span className="mark">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--live-deep)" strokeWidth="2" strokeLinecap="round">
-            <path d="M3 12h2.2l1.6-6 2.6 13 2.4-9 1.8 5 1.6-3H21" />
-          </svg>
-        </span>
+      <Link href="/" className="brand" aria-label="Soundcheck home">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="brand-logo" src="/logo.png" alt="Soundcheck" width={30} height={30} />
         <span className="wm">sound<b>check</b></span>
       </Link>
       <div className="links">

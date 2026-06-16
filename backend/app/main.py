@@ -112,8 +112,10 @@ async def run_detail(room_id: str) -> dict:
 
 @app.get("/runs/{room_id}/timeline")
 async def run_timeline(room_id: str) -> dict:
-    return {"timeline": _rows(
-        "SELECT * FROM timeline WHERE room_id=? ORDER BY created_at", room_id)}
+    rows = _rows("SELECT * FROM timeline WHERE room_id=? ORDER BY created_at", room_id)
+    for r in rows:
+        r["mentions"] = json.loads(r.get("mentions") or "[]")
+    return {"timeline": rows}
 
 
 @app.get("/runs/{room_id}/findings")

@@ -1,5 +1,6 @@
 import { api, BFF_BASE } from "@/lib/api";
 import { Icon, SevGlyph } from "@/components/glyphs";
+import { CopyLink } from "@/components/copy-link";
 import type { ProvenanceNode } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -94,11 +95,21 @@ export default async function RunConductor({ params }: { params: Promise<{ id: s
         </section>
       )}
 
-      <div className="gov-foot">
-        <a className="btn" href={`${BFF_BASE}/runs/${id}/audit-package`} target="_blank" rel="noreferrer">
-          <Icon name="arrowUpRight" /> Export audit package (JSON)
-        </a>
-      </div>
+      <section className="deliverable">
+        <div className="dl-body">
+          <h3><Icon name="tape" /> Audit deliverable</h3>
+          <p>
+            A self-contained, provenance-complete record — the seal, the patch, the cross-model
+            review, and the full chain back to the Band ledger. The artifact an auditor receives.
+          </p>
+        </div>
+        <div className="dl-actions">
+          <a className="btn btn-primary" href={`${BFF_BASE}/runs/${id}/audit-package`} target="_blank" rel="noreferrer">
+            <Icon name="arrowUpRight" /> Export package (JSON)
+          </a>
+          <CopyLink />
+        </div>
+      </section>
     </div>
   );
 }

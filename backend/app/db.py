@@ -23,7 +23,9 @@ CREATE TABLE IF NOT EXISTS runs (
     control_count   INTEGER DEFAULT 0,
     orgcontext_count INTEGER DEFAULT 0,
     patch_count     INTEGER DEFAULT 0,
-    approval_count  INTEGER DEFAULT 0
+    approval_count  INTEGER DEFAULT 0,
+    task_count      INTEGER DEFAULT 0,
+    message_count   INTEGER DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS ledger (
     id           TEXT PRIMARY KEY,
@@ -45,6 +47,7 @@ CREATE TABLE IF NOT EXISTS timeline (
     sender       TEXT,
     sender_type  TEXT,
     content      TEXT,
+    mentions     TEXT,   -- json array of resolved @names this message addresses
     created_at   TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_ledger_room ON ledger(room_id);
@@ -58,10 +61,30 @@ def connect() -> sqlite3.Connection:
     return conn
 
 
+# Columns added after the first schema shipped — ALTER them in if an older
+# cache predates them (CREATE TABLE IF NOT EXISTS won't add to an existing table).
+_RUNS_MIGRATIONS = {
+    "task_count": "INTEGER DEFAULT 0",
+    "message_count": "INTEGER DEFAULT 0",
+}
+_TIMELINE_MIGRATIONS = {
+    "mentions": "TEXT",
+}
+
+
+def _ensure_columns(conn: sqlite3.Connection, table: str, cols: dict[str, str]) -> None:
+    have = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
+    for col, decl in cols.items():
+        if col not in have:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {decl}")
+
+
 def init_db() -> None:
     conn = connect()
     try:
         conn.executescript(SCHEMA)
+        _ensure_columns(conn, "runs", _RUNS_MIGRATIONS)
+        _ensure_columns(conn, "timeline", _TIMELINE_MIGRATIONS)
         conn.commit()
     finally:
         conn.close()
@@ -74,14 +97,15 @@ def _j(v: Any) -> str:
 def upsert_run(conn: sqlite3.Connection, run: dict) -> None:
     conn.execute(
         """INSERT INTO runs (room_id,title,created_at,updated_at,finding_count,
-              control_count,orgcontext_count,patch_count,approval_count)
+              control_count,orgcontext_count,patch_count,approval_count,task_count,message_count)
            VALUES (:room_id,:title,:created_at,:updated_at,:finding_count,
-              :control_count,:orgcontext_count,:patch_count,:approval_count)
+              :control_count,:orgcontext_count,:patch_count,:approval_count,:task_count,:message_count)
            ON CONFLICT(room_id) DO UPDATE SET
               title=excluded.title, updated_at=excluded.updated_at,
               finding_count=excluded.finding_count, control_count=excluded.control_count,
               orgcontext_count=excluded.orgcontext_count, patch_count=excluded.patch_count,
-              approval_count=excluded.approval_count""",
+              approval_count=excluded.approval_count, task_count=excluded.task_count,
+              message_count=excluded.message_count""",
         run,
     )
 
@@ -100,7 +124,7 @@ def replace_timeline(conn: sqlite3.Connection, room_id: str, rows: list[dict]) -
     conn.execute("DELETE FROM timeline WHERE room_id=?", (room_id,))
     conn.executemany(
         """INSERT OR REPLACE INTO timeline
-           (id,room_id,mtype,sender,sender_type,content,created_at)
-           VALUES (:id,:room_id,:mtype,:sender,:sender_type,:content,:created_at)""",
+           (id,room_id,mtype,sender,sender_type,content,mentions,created_at)
+           VALUES (:id,:room_id,:mtype,:sender,:sender_type,:content,:mentions,:created_at)""",
         rows,
     )

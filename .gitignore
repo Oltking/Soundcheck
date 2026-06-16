@@ -50,3 +50,8 @@ backend/soundcheck.db
 # dev server logs
 bff.log
 frontend.log
+
+# screenshots / scratch
+image*.png
+bff.err.log
+remediation_*.log

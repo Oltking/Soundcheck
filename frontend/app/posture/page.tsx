@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { SevGlyph, sevKind } from "@/components/glyphs";
+import { runName, runShortId } from "@/lib/run-name";
 import type { Run } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Posture" };
 
 export default async function Posture() {
   let runs: Run[] = [];
@@ -94,8 +96,8 @@ export default async function Posture() {
         <h3>Run history</h3>
         <div className="runhist">
           {runs.map((r) => (
-            <Link key={r.room_id} href={`/stage?run=${r.room_id}`} className="rh-row">
-              <span className="mono">{r.room_id.slice(0, 8)}</span>
+            <Link key={r.room_id} href={`/run/${r.room_id}/stage`} className="rh-row">
+              <span className="rh-name">{runName(r.room_id)} <span className="mono rh-id">{runShortId(r.room_id)}</span></span>
               <span className="rh-when">{r.created_at ? new Date(r.created_at).toLocaleDateString() : "—"}</span>
               <span className="rh-bar"><i style={{ width: `${Math.min(100, r.finding_count * 1.5)}%` }} /></span>
               <span className="tnum rh-n">{r.finding_count} findings</span>

@@ -9,7 +9,7 @@ export default async function LegacyStage({
   searchParams: Promise<{ run?: string }>;
 }) {
   const { run } = await searchParams;
-  let target = "/";
+  let target = "/app";
   if (run) {
     target = `/run/${run}/stage`;
   } else {

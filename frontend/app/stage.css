@@ -5,7 +5,7 @@
 .stage-region {
   position: relative; display: flex; flex-direction: column; min-width: 0;
   background:
-    radial-gradient(120% 80% at 50% -8%, rgba(31,138,122,0.07), transparent 60%),
+    radial-gradient(120% 80% at 50% -8%, rgba(37,99,235,0.07), transparent 60%),
     var(--paper);
   border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -20,10 +20,19 @@
 .stage-head .tallies span { display: inline-flex; align-items: center; gap: 5px; }
 .stage-head .tallies svg { width: 10px; height: 10px; }
 
+.stage-legend { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); padding: 9px var(--s5);
+  border-bottom: 1px solid var(--line-soft); background: var(--surface); }
+.stage-legend span { display: inline-flex; align-items: center; gap: 7px; font-size: var(--t-xs); color: var(--ink-3); }
+.stage-legend i { width: 14px; height: 10px; border-radius: 3px; flex: none; }
+.stage-legend .lg-card { background: var(--surface-3); border: 1px solid var(--line-strong); }
+.stage-legend .lg-thread { width: 16px; height: 0; border-top: 2.5px solid var(--live-bright); border-radius: 0;
+  box-shadow: 0 0 4px var(--live-bright); }
+.stage-legend .lg-podium { background: var(--ink); border-radius: var(--r-pill); width: 10px; height: 10px; }
+
 /* stage + score side by side */
-.stage-body { display: flex; min-height: 540px; }
+.stage-body { display: flex; min-height: 500px; }
 .stage-wrap { flex: 1; position: relative; overflow: hidden; display: flex;
-  align-items: center; justify-content: center; min-height: 540px; }
+  align-items: center; justify-content: center; min-height: 500px; }
 .stage-scale { position: relative; transform-origin: center center; }
 .stage-floor { position: relative; }
 .floor-bg { position: absolute; inset: 0; pointer-events: none; }
@@ -31,13 +40,21 @@
   color: var(--ink-3); font-size: var(--t-sm); }
 
 /* ---------- Player card ---------- */
-.player { position: absolute; width: 168px; background: var(--surface-2);
+.player { position: absolute; background: var(--surface-2); cursor: pointer;
   border: 1px solid var(--line); border-radius: var(--r-lg); padding: 11px 12px 12px;
   box-shadow: var(--shadow); z-index: 3;
-  transition: box-shadow .35s var(--ease), border-color .35s var(--ease),
-    opacity .45s var(--ease), transform .45s var(--ease); }
+  transition: left .55s var(--ease), top .55s var(--ease), width .55s var(--ease),
+    box-shadow .4s var(--ease), border-color .4s var(--ease),
+    opacity .45s var(--ease), transform .45s var(--ease), padding .4s var(--ease); }
 .player.idle { opacity: 0.66; box-shadow: var(--shadow-xs); }
-.player.thinking { border-color: var(--live-line); box-shadow: var(--shadow-lg), var(--glow-live); }
+.player.thinking { border-color: var(--live-line); }
+
+/* whoever's performing: stepped forward, grown, fully readable */
+.player.spotlit { z-index: 8; padding: 18px 20px 20px; background: var(--surface);
+  border-color: var(--live-line); box-shadow: var(--shadow-lg), 0 0 0 1px var(--live-line), 0 0 46px var(--live-glow); }
+/* the seated band recedes while someone's in the light */
+.player.receded { opacity: 0.42; filter: saturate(0.75); box-shadow: var(--shadow-xs); }
+.player.receded:hover { opacity: 0.7; }
 .p-top { display: flex; align-items: center; gap: 9px; }
 .inst { width: 32px; height: 32px; border-radius: 9px; background: var(--paper-well);
   display: grid; place-items: center; border: 1px solid var(--line); flex: none; color: var(--ink); }
@@ -57,13 +74,87 @@
 .eq i { width: 2px; background: var(--live); border-radius: 1px; height: 70%; }
 .p-role { font-family: var(--mono); font-size: 9.5px; color: var(--ink-3); margin-top: 9px;
   padding-top: 7px; border-top: 1px solid var(--line-soft); letter-spacing: 0.02em; }
-.p-stream { margin-top: 7px; height: 46px; overflow: hidden; display: flex; flex-direction: column;
-  justify-content: flex-end; gap: 2px; }
-.sline { font-family: var(--mono); font-size: 10px; line-height: 1.35; color: var(--ink-2);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: .5; }
-.sline.new { opacity: 1; color: var(--ink); }
-.sline .k { color: var(--live-deep); }
-.sline.idle-line { color: var(--ink-4); font-style: italic; }
+
+/* ---- compact seat (not in the spotlight) ---- */
+.p-seatline { margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--line-soft);
+  font-family: var(--mono); font-size: 10px; line-height: 1.3; color: var(--ink-3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---- the spotlight card ---- */
+.player.spotlit .inst.big { width: 52px; height: 52px; border-radius: 13px;
+  background: var(--live-tint); border-color: var(--live-line); color: var(--live-deep); }
+.player.spotlit .inst.big svg { width: 29px; height: 29px; }
+.player.spotlit .p-name { font-size: clamp(23px, 3vw, 33px); letter-spacing: -0.02em; }
+.player.spotlit .p-handle { font-size: 13px; }
+.player.spotlit .p-role { font-size: 13px; }
+.p-stat.perform { color: var(--live-deep); font-size: 13px; }
+
+/* role + the handoff (who the latest say addresses) on one line */
+.player.spotlit .p-roleline { display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; margin-top: 9px; padding-top: 7px; border-top: 1px solid var(--line-soft); }
+.player.spotlit .p-roleline .p-role { margin-top: 0; padding-top: 0; border-top: none; }
+.p-handoff { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-3); }
+.p-handoff svg { width: 13px; height: 13px; color: var(--live-deep); }
+
+/* left column: the SAY (the chat) */
+.say-stream { display: flex; flex-direction: column; gap: 7px; }
+.say-line { font-size: 13px; line-height: 1.45; color: var(--ink-2); word-break: break-word; }
+.say-line.latest { font-size: 16px; line-height: 1.5; color: var(--ink); font-weight: 500; }
+/* wide & short: the blue "now" stays fixed; the chat/history column extends */
+.p-body { margin-top: 14px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px; align-items: start; }
+.p-now { padding: 13px 15px; background: var(--live-tint);
+  border: 1px solid var(--live-line); border-radius: var(--r); }
+.now-k { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--live-deep); margin-bottom: 6px; }
+.p-log .now-k { color: var(--ink-3); }
+.now-text { font-size: 16px; color: var(--ink); line-height: 1.5; word-break: break-word; }
+.p-log { display: flex; flex-direction: column; gap: 7px; }
+.logline { font-family: var(--mono); font-size: 11px; line-height: 1.5; color: var(--ink-3);
+  word-break: break-word; }
+.logline .k { color: var(--live-deep); }
+
+/* Desktop: the floor is scaled with overflow hidden, so a long performer card
+   would get clipped. Bound each column and let long content scroll inside it. */
+.stage-floor .player.spotlit .p-now,
+.stage-floor .player.spotlit .p-log { max-height: 176px; overflow-y: auto; overscroll-behavior: contain; }
+.stage-floor .player.spotlit .p-now { padding-right: 11px; }
+.stage-floor .player.spotlit .p-log { padding-right: 4px; }
+
+/* ---------- Mobile stage (full-width performer + tappable band rail) ---------- */
+/* ~20% smaller than desktop, single-column body */
+.stage-mobile { flex: 1; min-width: 0; padding: var(--s3); display: flex; flex-direction: column; gap: var(--s3); }
+.stage-mobile .player.spotlit.m-spot { position: static; width: auto; padding: 14px 15px 15px;
+  transition: box-shadow .4s var(--ease), border-color .4s var(--ease); }
+.stage-mobile .p-body { grid-template-columns: 1fr; gap: 11px; margin-top: 11px; }
+.stage-mobile .player.spotlit .inst.big { width: 42px; height: 42px; border-radius: 11px; }
+.stage-mobile .player.spotlit .inst.big svg { width: 23px; height: 23px; }
+.stage-mobile .player.spotlit .p-name { font-size: var(--t-h2); }
+.stage-mobile .player.spotlit .p-handle,
+.stage-mobile .player.spotlit .p-role { font-size: var(--t-xs); }
+.stage-mobile .p-stat.perform { font-size: var(--t-xs); }
+.stage-mobile .p-now { padding: 10px 12px; }
+.stage-mobile .now-k { font-size: 10px; margin-bottom: 4px; }
+.stage-mobile .now-text { font-size: var(--t-sm); }
+.stage-mobile .say-line { font-size: 12px; }
+.stage-mobile .say-line.latest { font-size: 13px; }
+.stage-mobile .logline { font-size: 11px; }
+.stage-mobile .p-handoff { font-size: 10px; }
+.m-rail { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 8px; scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch; }
+.m-seat { flex: none; width: 66px; scroll-snap-align: start; display: flex; flex-direction: column;
+  align-items: center; gap: 5px; padding: 9px 5px; cursor: pointer; color: var(--ink);
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r);
+  transition: border-color .2s, box-shadow .2s, background .2s; }
+.m-seat.on { border-color: var(--live-line); box-shadow: var(--glow-live); background: var(--live-tint); }
+.m-seat-ico { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center;
+  background: var(--paper-well); border: 1px solid var(--line); }
+.m-seat.on .m-seat-ico { background: #fff; color: var(--live-deep); border-color: var(--live-line); }
+.m-seat-ico svg { width: 15px; height: 15px; }
+.m-seat-name { font-size: 9px; font-weight: 600; text-align: center; line-height: 1.15; }
+.m-podium { text-align: center; font-size: var(--t-xs); color: var(--ink-3); padding-top: 2px; }
+.m-podium b { color: var(--ink); }
+.stage-empty-note.rel { position: static; padding: var(--s8) var(--s4); }
 
 /* ---------- Threads of light ---------- */
 .thread-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
@@ -80,7 +171,7 @@
 .podium .sub { font-family: var(--mono); font-size: 9px; color: var(--ink-3); margin-top: 2px; }
 
 /* ---------- The Score rail ---------- */
-.score-rail { width: 338px; flex: none; background: var(--surface);
+.score-rail { width: 300px; flex: none; background: var(--surface);
   border-left: 1px solid var(--line); display: flex; flex-direction: column; }
 .score-head { padding: 16px var(--s5) 13px; border-bottom: 1px solid var(--line); }
 .score-head .row1 { display: flex; align-items: center; justify-content: space-between; }
@@ -124,4 +215,13 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .eq i:nth-child(odd) { height: 80%; } .eq i:nth-child(even) { height: 45%; }
+}
+
+/* ---------- Responsive: stack the Score under the Stage ---------- */
+@media (max-width: 920px) {
+  .stage-body { flex-direction: column; min-height: 0; }
+  .stage-wrap { min-height: 420px; }
+  .score-rail { width: auto; border-left: none; border-top: 1px solid var(--line); }
+  .score-list { max-height: 56vh; }
+  .stage-legend { gap: 6px var(--s4); }
 }

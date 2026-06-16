@@ -2,10 +2,16 @@ import "../../stage.css";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { RunTabs } from "@/components/run-tabs";
-import { Icon } from "@/components/glyphs";
+import { Icon, SevGlyph } from "@/components/glyphs";
+import { runName, runShortId, runStatus } from "@/lib/run-name";
 import type { Run } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return { title: runName(id) };
+}
 
 export default async function RunLayout({
   children,
@@ -21,20 +27,37 @@ export default async function RunLayout({
     if (!run) { await api.refreshOne(id); run = (await api.listRuns()).runs.find((r) => r.room_id === id) || null; }
   } catch { /* BFF down — children will surface it */ }
 
+  const status = run ? runStatus(run) : null;
+
   return (
-    <main className="page" style={{ maxWidth: 1460 }}>
+    <main className="page" style={{ maxWidth: 1640 }}>
       <div className="run-bar">
         <div className="run-bar-left">
-          <Link href="/" className="run-back"><Icon name="chevron" /> Runs</Link>
-          <span className="run-id mono">{id.slice(0, 8)}</span>
-          {run && (
-            <span className="run-counts mono">
-              {run.finding_count} findings · {run.control_count} controls · {run.patch_count} patches · {run.approval_count} approvals
+          <Link href="/app" className="run-back"><Icon name="chevron" /> Runs</Link>
+          <span className="run-id">{runName(id)}</span>
+          <span className="run-id-chip mono">{runShortId(id)}</span>
+          {status && (
+            <span className={`sev sev-${status.kind} run-status`}>
+              <SevGlyph kind={status.kind} />{status.label}
             </span>
           )}
         </div>
         <RunTabs roomId={id} />
       </div>
+      {run && (
+        <div className="run-counts-row">
+          {([
+            ["findings", run.finding_count],
+            ["controls", run.control_count],
+            ["patches", run.patch_count],
+            ["approvals", run.approval_count],
+            ["tasks", run.task_count],
+            ["chats", run.message_count],
+          ] as const).map(([label, n]) => (
+            <span key={label} className="rcount"><b className="tnum">{n}</b>{label}</span>
+          ))}
+        </div>
+      )}
       {children}
     </main>
   );

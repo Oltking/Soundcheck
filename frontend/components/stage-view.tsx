@@ -1,48 +1,54 @@
 "use client";
 
-// The Stage — the concert-hall view, ported from design/stage/app.jsx and wired
-// to LIVE Band data (timeline + findings via the BFF). Players are positioned in
-// an arc with the Bandleader centred; each card streams that agent's real events;
-// the Score rail fills with real findings; the latest @mention handoff draws a
-// thread of light. Polls the BFF so an in-progress run animates.
+// The Stage — the concert-hall view, wired to LIVE Band data (timeline +
+// findings via the BFF). The band sits small along an arc; whoever is performing
+// now STEPS FORWARD into the spotlight at centre stage and grows large enough to
+// read everything they're doing — task and all. Players take turns (auto-rotate
+// + follow the latest live activity); click any seat to pin the spotlight on it.
+// On narrow screens it switches to a mobile layout: a full-width performer card
+// above a tappable rail of the seated band.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { INSTRUMENTS, SevChip, SevGlyph, sevKind, Icon } from "@/components/glyphs";
+import { MentionText } from "@/components/mention-text";
 import type { FindingEntry, TimelineItem } from "@/lib/types";
 
-const CARD_W = 176, CARD_H = 138;
+const SEAT_W = 152, SEAT_H = 92;   // compact seated card (layout footprint)
+const SPOT_W = 740;                // the spotlight (centre-stage) card — wide & short
 
+interface Seat { cx: number; cy: number; left: number; top: number }
 interface Layout {
-  W: number;
-  H: number;
-  positions: { cx: number; cy: number; left: number; top: number }[];
+  W: number; H: number;
+  seats: Seat[];
+  spot: { left: number; top: number; cx: number; cy: number };
   podium: { x: number; y: number };
 }
 
-// Concert-hall arc sized to the player count so cards never overlap. The band
-// sits along a shallow arc (Bandleader centred + highest); the conductor's
-// podium sits centred just below the lowest seats.
+// Three bands: the band seated along an arc (top), the spotlight (middle), the
+// conductor's podium (bottom). Sized to the player count so seats never overlap.
 function computeLayout(n: number): Layout {
-  const pitch = CARD_W + 34;        // guaranteed horizontal gap between cards
-  const margin = 70;
-  const W = Math.max(1100, margin * 2 + Math.max(0, n - 1) * pitch + CARD_W);
-  const topMax = 150;               // y of the lowest (outer) seats
-  const amplitude = 96;             // how much the centre seats rise
-  const positions = Array.from({ length: n }, (_, i) => {
+  // tighter spread + flatter arc → smaller native floor, so the fit-scale is
+  // higher and the band/spotlight render larger (a landscape, "screen" stage)
+  const pitch = SEAT_W + 18;
+  const margin = 44;
+  const W = Math.max(1040, margin * 2 + Math.max(0, n - 1) * pitch + SEAT_W);
+  const topMax = 56, amplitude = 38;
+  const seats: Seat[] = Array.from({ length: n }, (_, i) => {
     const f = n === 1 ? 0.5 : i / (n - 1);
-    const cx = margin + CARD_W / 2 + f * (Math.max(0, n - 1) * pitch);
-    const dip = 1 - Math.pow((f - 0.5) * 2, 2); // 0 at edges → 1 centre
+    const cx = margin + SEAT_W / 2 + f * (Math.max(0, n - 1) * pitch);
+    const dip = 1 - Math.pow((f - 0.5) * 2, 2);
     const top = topMax - dip * amplitude;
-    return { cx, cy: top + CARD_H / 2, left: cx - CARD_W / 2, top };
+    return { cx, cy: top + SEAT_H / 2, left: cx - SEAT_W / 2, top };
   });
-  const seatFloor = topMax + CARD_H; // below the lowest cards
-  const podium = { x: W / 2, y: seatFloor + 70 };
-  const H = podium.y + 110;
-  return { W, H, positions, podium };
+  const seatFloor = topMax + SEAT_H;
+  const spotTop = seatFloor + 24;
+  const spot = { left: W / 2 - SPOT_W / 2, top: spotTop, cx: W / 2, cy: spotTop + 112 };
+  const podium = { x: W / 2, y: spotTop + 334 }; // +15% taller spotlight rectangle
+  const H = podium.y + 84;
+  return { W, H, seats, spot, podium };
 }
 
-// Map an agent display name to an instrument glyph + short role.
 function instrumentFor(name: string): { inst: keyof typeof INSTRUMENTS; role: string } {
   const n = name.toLowerCase();
   if (n.includes("bandleader")) return { inst: "bandleader", role: "orchestrator" };
@@ -61,19 +67,19 @@ interface Player {
   name: string;
   inst: keyof typeof INSTRUMENTS;
   role: string;
-  stream: [string, string][]; // [verb, detail]
+  says: { text: string; mentions: string[] }[]; // the chat — text messages, oldest → newest
+  activity: [string, string][];                 // the rest — [verb, detail] non-text events
+  handoff: string[];                            // who the latest say addresses
+  seatLine: string;                             // one-line summary for the seated card
   status: "idle" | "thinking" | "done";
 }
 
-function streamFromEvents(events: TimelineItem[]): [string, string][] {
-  return events.slice(-4).map((e) => {
-    const verb = e.mtype === "text" ? "say"
-      : e.mtype === "thought" ? "think"
-      : e.mtype === "task" ? "task"
-      : e.mtype;
-    const detail = (e.content || "").replace(/@\[\[[^\]]+\]\]/g, "").trim().slice(0, 60);
-    return [verb, detail] as [string, string];
-  });
+function verbOf(e: TimelineItem): string {
+  return e.mtype === "thought" ? "think"
+    : e.mtype === "task" ? "task"
+    : e.mtype === "tool_call" ? "tool"
+    : e.mtype === "tool_result" ? "result"
+    : e.mtype;
 }
 
 export function StageView({
@@ -87,10 +93,10 @@ export function StageView({
   const [timeline, setTimeline] = useState<TimelineItem[]>(initialTimeline);
   const [findings, setFindings] = useState<FindingEntry[]>(initialFindings);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.7);
+  const [narrow, setNarrow] = useState(false);
 
-  // Poll the BFF (re-project + read) only for a live/in-progress run, so a
-  // completed run doesn't keep re-projecting and spending nothing-changes work.
   useEffect(() => {
     if (!live) return;
     let alive = true;
@@ -106,47 +112,71 @@ export function StageView({
     return () => { alive = false; clearInterval(iv); };
   }, [roomId, live]);
 
-
-  const { players, layout, thread } = useMemo(() => {
-    // group events by sender (agents only)
+  const { players, layout, latestIdx, mentionNames } = useMemo(() => {
     const bySender = new Map<string, TimelineItem[]>();
     for (const m of timeline) {
-      const s = m.sender || "?";
       if (m.sender_type === "User") continue;
+      const s = m.sender || "?";
       if (!bySender.has(s)) bySender.set(s, []);
       bySender.get(s)!.push(m);
     }
     let names = [...bySender.keys()];
-    // order: put Bandleader in the centre of the arc
     names = names.filter((n) => !n.toLowerCase().includes("bandleader"));
     const bl = [...bySender.keys()].find((n) => n.toLowerCase().includes("bandleader"));
     const mid = Math.floor(names.length / 2);
     if (bl) names.splice(mid, 0, bl);
 
-    const lastSenderAt = (s: string) => bySender.get(s)!.at(-1)?.created_at || "";
     const players: Player[] = names.map((name) => {
       const evs = bySender.get(name)!;
       const last = evs.at(-1)?.created_at || "";
       const recent = Date.now() - new Date(last).getTime() < 20000;
       const { inst, role } = instrumentFor(name);
-      return { name, inst, role, stream: streamFromEvents(evs),
-        status: recent ? "thinking" : "done" };
+      const texts = evs.filter((e) => e.mtype === "text");
+      const says = texts.slice(-6).map((e) => ({ text: (e.content || "").trim(), mentions: e.mentions || [] }));
+      const activity = evs.filter((e) => e.mtype !== "text").slice(-8).map((e) =>
+        [verbOf(e), (e.content || "").replace(/@\[\[[^\]]+\]\]/g, "").trim().slice(0, 200)] as [string, string]);
+      const handoff = texts.length ? (texts[texts.length - 1].mentions || []) : [];
+      const seatLine = (evs.at(-1)?.content || "").trim().slice(0, 90);
+      return { name, inst, role, says, activity, handoff, seatLine, status: recent ? "thinking" : "done" };
     });
     const layout = computeLayout(players.length);
 
-    // latest handoff thread: last text message from an agent to the next agent
-    const texts = timeline.filter((m) => m.mtype === "text" && m.sender_type !== "User");
-    let thread: { from: number; to: number } | null = null;
-    if (texts.length) {
-      const lastText = texts.at(-1)!;
-      const fromIdx = players.findIndex((p) => p.name === lastText.sender);
-      // best-effort target: the most-recently-active OTHER player
-      const others = players.map((p, i) => ({ i, t: lastSenderAt(p.name) }))
-        .filter((x) => x.i !== fromIdx).sort((a, b) => (a.t < b.t ? 1 : -1));
-      if (fromIdx >= 0 && others.length) thread = { from: fromIdx, to: others[0].i };
-    }
-    return { players, layout, thread };
+    let latestIdx = -1; let latestT = "";
+    players.forEach((p, i) => {
+      const t = bySender.get(p.name)!.at(-1)?.created_at || "";
+      if (t > latestT) { latestT = t; latestIdx = i; }
+    });
+
+    // names we highlight as @mentions anywhere on the stage
+    const mentionSet = new Set<string>();
+    for (const m of timeline) (m.mentions || []).forEach((n) => mentionSet.add(n));
+    players.forEach((p) => mentionSet.add(p.name));
+
+    return { players, layout, latestIdx, mentionNames: [...mentionSet] };
   }, [timeline]);
+
+  // ---- the spotlight ----------------------------------------------------
+  const [spot, setSpot] = useState(0);
+  const [pinned, setPinned] = useState(false);
+
+  useEffect(() => {
+    setSpot((s) => (players.length ? Math.min(s, players.length - 1) : 0));
+  }, [players.length]);
+
+  useEffect(() => {
+    if (pinned || players.length < 2) return;
+    const iv = setInterval(() => setSpot((s) => (s + 1) % players.length), 3800);
+    return () => clearInterval(iv);
+  }, [pinned, players.length]);
+
+  useEffect(() => {
+    if (live && !pinned && latestIdx >= 0) setSpot(latestIdx);
+  }, [live, pinned, latestIdx]);
+
+  function pickSeat(i: number) {
+    if (i === spot) { setPinned((p) => !p); return; }
+    setSpot(i); setPinned(true);
+  }
 
   const tallies = useMemo(() => {
     const t = { critical: 0, attention: 0, info: 0 };
@@ -157,8 +187,20 @@ export function StageView({
     return t;
   }, [findings]);
 
-  // fit the (now dynamically-sized) canvas into the wrapper
+  // is the stage region narrow enough to switch to the mobile layout?
   useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    const measure = () => setNarrow(el.clientWidth < 720);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // fit the (desktop) floor into its wrapper
+  useEffect(() => {
+    if (narrow) return;
     const el = wrapRef.current;
     if (!el) return;
     const measure = () => {
@@ -169,7 +211,9 @@ export function StageView({
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [layout.W, layout.H]);
+  }, [layout.W, layout.H, narrow]);
+
+  const current = players[spot];
 
   return (
     <div className="stage-region">
@@ -181,25 +225,60 @@ export function StageView({
           <span style={{ color: "var(--info)" }}><SevGlyph kind="info" /> {tallies.info}</span>
         </span>
       </div>
+      <div className="stage-legend">
+        <span><i className="lg-card" /> the band is seated along the arc</span>
+        <span><i className="lg-thread" /> whoever’s performing steps into the spotlight</span>
+        <span><i className="lg-podium" /> you preside — nothing ships without sign-off</span>
+      </div>
 
-      <div className="stage-body">
-        <div className="stage-wrap" ref={wrapRef}>
-          <div className="stage-scale" style={{ transform: `scale(${scale})` }}>
-            <div className="stage-floor" style={{ width: layout.W, height: layout.H }}>
-              <FloorBg W={layout.W} H={layout.H} podium={layout.podium} />
-              {thread && layout.positions[thread.from] && layout.positions[thread.to] && (
-                <Threads a={layout.positions[thread.from]} b={layout.positions[thread.to]} W={layout.W} H={layout.H} />
+      <div className="stage-body" ref={bodyRef}>
+        {narrow ? (
+          players.length === 0 ? (
+            <div className="stage-empty-note rel">No activity yet for this run.</div>
+          ) : (
+            <div className="stage-mobile">
+              {current && (
+                <div className="player spotlit m-spot">
+                  <SpotlightInner player={current} pinned={pinned} names={mentionNames} />
+                </div>
               )}
-              {players.map((p, i) => (
-                <PlayerCard key={p.name} player={p} pos={layout.positions[i]} />
-              ))}
-              <Podium podium={layout.podium} />
+              <div className="m-rail">
+                {players.map((p, i) => (
+                  <button key={p.name} className={`m-seat ${i === spot ? "on" : ""}`} onClick={() => pickSeat(i)}>
+                    <span className="m-seat-ico">{INSTRUMENTS[p.inst]()}</span>
+                    <span className="m-seat-name">{p.name}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="m-podium mono"><b>You</b> · the conductor — nothing ships without sign-off</div>
             </div>
+          )
+        ) : (
+          <div className="stage-wrap" ref={wrapRef}>
+            <div className="stage-scale" style={{ transform: `scale(${scale})` }}>
+              <div className="stage-floor" style={{ width: layout.W, height: layout.H }}>
+                <FloorBg W={layout.W} H={layout.H} podium={layout.podium} spot={layout.spot} />
+                {players.map((p, i) => (
+                  <PlayerCard
+                    key={p.name}
+                    player={p}
+                    seat={layout.seats[i]}
+                    spot={layout.spot}
+                    spotlit={i === spot}
+                    receded={players.length > 1 && i !== spot}
+                    pinned={pinned && i === spot}
+                    names={mentionNames}
+                    onClick={() => pickSeat(i)}
+                  />
+                ))}
+                <Podium podium={layout.podium} />
+              </div>
+            </div>
+            {players.length === 0 && (
+              <div className="stage-empty-note">No activity yet for this run.</div>
+            )}
           </div>
-          {players.length === 0 && (
-            <div className="stage-empty-note">No activity yet for this run.</div>
-          )}
-        </div>
+        )}
 
         <ScoreRail findings={findings} />
       </div>
@@ -207,82 +286,116 @@ export function StageView({
   );
 }
 
-function PlayerCard({ player, pos }: { player: Player; pos: { left: number; top: number } }) {
+function SpotlightInner({ player, pinned, names }: { player: Player; pinned: boolean; names: string[] }) {
+  const Inst = INSTRUMENTS[player.inst];
+  const handle = "@" + player.name.toLowerCase().replace(/\s+/g, "-");
+  return (
+    <>
+      <div className="p-top">
+        <div className="inst big">{Inst()}</div>
+        <div className="p-id">
+          <div className="p-name">{player.name}</div>
+          <div className="p-handle mono">{handle}</div>
+        </div>
+        <span className="p-stat perform">
+          <span className="eq"><i /><i /><i /><i /></span>{pinned ? "pinned" : "on the mic"}
+        </span>
+      </div>
+      <div className="p-roleline">
+        <span className="p-role">{player.role}</span>
+        {player.handoff.length > 0 && (
+          <span className="p-handoff"><Icon name="handoff" />
+            {player.handoff.map((n) => <span key={n} className="mention">@{n}</span>)}
+          </span>
+        )}
+      </div>
+      <div className="p-body">
+        {/* left column — the SAY (the chat) */}
+        <div className="p-now">
+          <span className="now-k mono">say · the chat</span>
+          {player.says.length === 0 ? (
+            <div className="say-line">— standing by —</div>
+          ) : (
+            <div className="say-stream">
+              {player.says.map((s, i) => (
+                <div className={"say-line" + (i === player.says.length - 1 ? " latest" : "")} key={i}>
+                  <MentionText text={s.text} mentions={names} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {/* right column — the rest of the events (think, tasks, tools) */}
+        <div className="p-log">
+          <span className="now-k mono">events</span>
+          {player.activity.length === 0 ? (
+            <div className="logline">— no events yet —</div>
+          ) : (
+            player.activity.slice().reverse().map((ln, i) => (
+              <div className="logline" key={i}><span className="k">{ln[0]}</span> {ln[1]}</div>
+            ))
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function SeatInner({ player }: { player: Player }) {
   const Inst = INSTRUMENTS[player.inst];
   return (
-    <div className={`player ${player.status}`} style={{ left: pos.left, top: pos.top }}>
+    <>
       <div className="p-top">
         <div className="inst">{Inst()}</div>
         <div className="p-id">
           <div className="p-name">{player.name}</div>
-          <div className="p-handle mono">@{player.name.toLowerCase().replace(/\s+/g, "-")}</div>
+          <div className="p-handle mono">{player.role}</div>
         </div>
         <span className={`p-stat ${player.status}`}>
-          {player.status === "thinking" ? <><span className="eq"><i /><i /><i /><i /></span>thinking</>
-            : <><SevGlyph kind="approved" />done</>}
+          {player.status === "thinking"
+            ? <span className="eq"><i /><i /><i /><i /></span>
+            : <SevGlyph kind="approved" />}
         </span>
       </div>
-      <div className="p-role">{player.role}</div>
-      <div className="p-stream">
-        {player.stream.length === 0
-          ? <div className="sline idle-line">— standing by —</div>
-          : player.stream.map((ln, i) => (
-            <div className={"sline" + (i === player.stream.length - 1 ? " new" : "")} key={i}>
-              <span className="k">{ln[0]}</span> {ln[1]}
-            </div>
-          ))}
-      </div>
+      <div className="p-seatline mono">{player.seatLine || "standing by"}</div>
+    </>
+  );
+}
+
+function PlayerCard({
+  player, seat, spot, spotlit, receded, pinned, names, onClick,
+}: {
+  player: Player; seat: Seat; spot: Layout["spot"];
+  spotlit: boolean; receded: boolean; pinned: boolean; names: string[]; onClick: () => void;
+}) {
+  const cls = `player ${player.status} ${spotlit ? "spotlit" : ""} ${receded ? "receded" : ""}`;
+  const style = spotlit
+    ? { left: spot.left, top: spot.top, width: SPOT_W }
+    : { left: seat.left, top: seat.top, width: SEAT_W };
+  return (
+    <div className={cls} style={style} onClick={onClick}
+      title={spotlit ? "Click to release the spotlight" : "Click to spotlight"}>
+      {spotlit ? <SpotlightInner player={player} pinned={pinned} names={names} /> : <SeatInner player={player} />}
     </div>
   );
 }
 
-function Threads({ a, b, W, H }: {
-  a: { cx: number; cy: number }; b: { cx: number; cy: number }; W: number; H: number;
+function FloorBg({ W, H, podium, spot }: {
+  W: number; H: number; podium: { x: number; y: number }; spot: { cx: number; cy: number };
 }) {
-  const mx = (a.cx + b.cx) / 2, my = Math.min(a.cy, b.cy) - 70;
-  const d = `M ${a.cx} ${a.cy} Q ${mx} ${my} ${b.cx} ${b.cy}`;
-  // arrowhead angle at the recipient
-  const ang = Math.atan2(b.cy - my, b.cx - mx);
-  const ah = 9;
-  const a1 = [b.cx - ah * Math.cos(ang - 0.4), b.cy - ah * Math.sin(ang - 0.4)];
-  const a2 = [b.cx - ah * Math.cos(ang + 0.4), b.cy - ah * Math.sin(ang + 0.4)];
-  return (
-    <svg className="thread-svg" viewBox={`0 0 ${W} ${H}`}>
-      <defs>
-        <filter id="thglow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="3" result="b" />
-          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-        </filter>
-      </defs>
-      {/* faint guide */}
-      <path d={d} fill="none" stroke="var(--line-strong)" strokeWidth="1.4" strokeDasharray="2 7" opacity="0.55" />
-      {/* the bright travelling thread */}
-      <path className="travel" d={d} fill="none" stroke="var(--live-bright)" strokeWidth="3.2"
-        strokeLinecap="round" opacity="0.98" filter="url(#thglow)" />
-      {/* origin pip + arrival ripple + arrowhead */}
-      <circle cx={a.cx} cy={a.cy} r="4.5" fill="var(--live)" />
-      <circle className="arrival" cx={b.cx} cy={b.cy} r="5" fill="none" stroke="var(--live-bright)" strokeWidth="2.4" />
-      <path d={`M ${b.cx} ${b.cy} L ${a1[0]} ${a1[1]} M ${b.cx} ${b.cy} L ${a2[0]} ${a2[1]}`}
-        stroke="var(--live-deep)" strokeWidth="2.4" strokeLinecap="round" fill="none" />
-    </svg>
-  );
-}
-
-function FloorBg({ W, H, podium }: { W: number; H: number; podium: { x: number; y: number } }) {
   return (
     <svg className="floor-bg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
       <defs>
-        <radialGradient id="footlight" cx="50%" cy="100%" r="62%">
-          <stop offset="0%" stopColor="rgba(31,138,122,0.12)" />
-          <stop offset="55%" stopColor="rgba(31,138,122,0.045)" />
-          <stop offset="100%" stopColor="rgba(31,138,122,0)" />
+        <radialGradient id="footlight" cx="50%" cy="50%" r="58%">
+          <stop offset="0%" stopColor="rgba(37,99,235,0.16)" />
+          <stop offset="55%" stopColor="rgba(37,99,235,0.06)" />
+          <stop offset="100%" stopColor="rgba(37,99,235,0)" />
         </radialGradient>
       </defs>
-      <rect x="0" y={H - 240} width={W} height="240" fill="url(#footlight)" />
-      {/* concentric stage rings the band stands within */}
-      <ellipse cx={W / 2} cy={podium.y + 30} rx={W * 0.46} ry="74" fill="none" stroke="var(--line)" strokeWidth="1" opacity="0.5" />
-      <ellipse cx={W / 2} cy={podium.y + 26} rx={W * 0.32} ry="54" fill="none" stroke="var(--line)" strokeWidth="1" opacity="0.65" />
-      <ellipse cx={W / 2} cy={podium.y + 22} rx={W * 0.18} ry="34" fill="none" stroke="var(--line-strong)" strokeWidth="1" opacity="0.7" />
+      <ellipse cx={spot.cx} cy={spot.cy + 30} rx={W * 0.34} ry="160" fill="url(#footlight)" />
+      <ellipse cx={W / 2} cy={podium.y + 30} rx={W * 0.44} ry="70" fill="none" stroke="var(--line)" strokeWidth="1" opacity="0.5" />
+      <ellipse cx={W / 2} cy={podium.y + 26} rx={W * 0.30} ry="50" fill="none" stroke="var(--line)" strokeWidth="1" opacity="0.65" />
+      <ellipse cx={W / 2} cy={podium.y + 22} rx={W * 0.17} ry="32" fill="none" stroke="var(--line-strong)" strokeWidth="1" opacity="0.7" />
     </svg>
   );
 }

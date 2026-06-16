@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 export const dynamic = "force-dynamic";
 
 export default async function Legacy() {
-  let target = "/";
+  let target = "/app";
   try {
     const { runs } = await api.listRuns();
     const r = runs.find((x) => x.finding_count > 0) || runs[0];

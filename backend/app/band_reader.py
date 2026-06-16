@@ -62,6 +62,34 @@ async def read_room_timeline(room_id: str) -> list[dict[str, Any]]:
     return sorted(seen.values(), key=lambda m: m.get("inserted_at", ""))
 
 
+async def read_room_participants(room_id: str) -> dict[str, dict[str, Any]]:
+    """Map participant_id -> {name, handle, type} for a room. This is how we
+    resolve @[[uuid]] mention tokens into readable @names (the Conductor included).
+    """
+    keys = _agent_keys()
+    sm_key = keys.get("stage_manager") or next(iter(keys.values()), None)
+    if not sm_key:
+        return {}
+    out: dict[str, dict[str, Any]] = {}
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            r = await client.get(
+                f"{_rest_url()}/api/v1/agent/chats/{room_id}/participants",
+                headers={"X-API-Key": sm_key}, params={"page_size": 100},
+            )
+            if r.status_code == 200:
+                for p in r.json().get("data", []):
+                    if p.get("id"):
+                        out[p["id"]] = {
+                            "name": p.get("name") or "participant",
+                            "handle": p.get("handle"),
+                            "type": p.get("type"),
+                        }
+        except httpx.HTTPError:
+            pass
+    return out
+
+
 async def list_known_rooms(limit: int = 50) -> list[dict[str, Any]]:
     """Rooms the Stage Manager participates in (every run's room is created by it),
     newest first."""

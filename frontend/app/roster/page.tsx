@@ -1,5 +1,7 @@
 import { INSTRUMENTS } from "@/components/glyphs";
 
+export const metadata = { title: "The Roster" };
+
 // The Roster — the workforce, their instruments, lanes (model + provider), and
 // frameworks. These are Soundcheck's registered Band agents (agent_config.yaml);
 // the model lanes reflect band_client's tiering.

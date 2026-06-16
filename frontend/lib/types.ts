@@ -10,6 +10,8 @@ export interface Run {
   orgcontext_count: number;
   patch_count: number;
   approval_count: number;
+  task_count: number;
+  message_count: number;
 }
 
 export type LedgerKind =
@@ -45,6 +47,7 @@ export interface TimelineItem {
   sender: string | null;
   sender_type: string | null;
   content: string | null;
+  mentions: string[]; // resolved @names this message addresses (handoffs)
   created_at: string | null;
 }
 
