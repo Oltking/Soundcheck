@@ -100,6 +100,10 @@
 .say-stream { display: flex; flex-direction: column; gap: 7px; }
 .say-line { font-size: 13px; line-height: 1.45; color: var(--ink-2); word-break: break-word; }
 .say-line.latest { font-size: 16px; line-height: 1.5; color: var(--ink); font-weight: 500; }
+/* live "being written" caret */
+.tw-caret { display: inline-block; width: 2px; height: 1em; margin-left: 1px; vertical-align: text-bottom;
+  background: var(--live); animation: twblink 1s steps(1) infinite; }
+@keyframes twblink { 50% { opacity: 0; } }
 /* wide & short: the blue "now" stays fixed; the chat/history column extends */
 .p-body { margin-top: 14px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 18px; align-items: start; }
@@ -155,6 +159,51 @@
 .m-podium { text-align: center; font-size: var(--t-xs); color: var(--ink-3); padding-top: 2px; }
 .m-podium b { color: var(--ink); }
 .stage-empty-note.rel { position: static; padding: var(--s8) var(--s4); }
+
+/* ---------- Ask-the-band dock (corner of the stage) ---------- */
+.sc-fab { position: absolute; left: var(--s4); bottom: var(--s4); z-index: 30;
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px 9px 9px; border-radius: var(--r-pill);
+  background: var(--live); color: var(--on-accent); border: 1px solid var(--live-deep); cursor: pointer;
+  font: inherit; font-size: var(--t-sm); font-weight: 600; box-shadow: var(--shadow), var(--glow-live); }
+.sc-fab:hover { background: var(--live-deep); transform: translateY(-1px); }
+.sc-fab-ico { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(255,255,255,0.18); }
+.sc-fab-ico svg { width: 15px; height: 15px; }
+
+.stage-chat.open { position: absolute; left: var(--s4); bottom: var(--s4); z-index: 30;
+  width: 340px; max-width: calc(100% - 2 * var(--s4)); max-height: min(74%, 460px);
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg); }
+.sc-head { display: flex; align-items: center; gap: 9px; padding: 10px 12px; border-bottom: 1px solid var(--line);
+  background: var(--surface); }
+.sc-head .sc-ico { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; flex: none;
+  background: var(--live-tint); border: 1px solid var(--live-line); color: var(--live-deep); }
+.sc-head .sc-ico svg { width: 16px; height: 16px; }
+.sc-h-t { flex: 1; font-size: var(--t-sm); font-weight: 650; line-height: 1.1; }
+.sc-h-t span { display: block; font-family: var(--mono); font-size: 9.5px; color: var(--ink-3); font-weight: 400; margin-top: 2px; }
+.sc-x { background: none; border: none; cursor: pointer; color: var(--ink-3); padding: 4px; display: grid; place-items: center; }
+.sc-x svg { width: 16px; height: 16px; transform: rotate(90deg); }
+.sc-stream { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 9px; min-height: 120px; }
+.sc-empty { color: var(--ink-3); font-size: var(--t-xs); text-align: center; margin: auto; max-width: 30ch; }
+.sc-msg { display: flex; max-width: 90%; }
+.sc-msg.you { margin-left: auto; justify-content: flex-end; }
+.sc-bubble { padding: 8px 11px; border-radius: 12px; font-size: var(--t-sm); line-height: 1.45; word-break: break-word; }
+.sc-msg.agent .sc-bubble { background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.sc-msg.you .sc-bubble { background: var(--live); color: var(--on-accent); border-bottom-right-radius: 4px; }
+.sc-msg.you .sc-bubble .mention { color: #fff; }
+.sc-typing { display: inline-flex; gap: 4px; padding: 2px 0; }
+.sc-typing i { width: 5px; height: 5px; border-radius: 50%; background: var(--ink-4); animation: asktype 1.1s infinite; }
+.sc-typing i:nth-child(2) { animation-delay: .18s; } .sc-typing i:nth-child(3) { animation-delay: .36s; }
+.sc-note { font-size: 10px; color: var(--ink-3); padding: 0 12px 6px; }
+.sc-input { display: flex; gap: 7px; padding: 9px 12px; border-top: 1px solid var(--line); }
+.sc-input input { flex: 1; font: inherit; font-size: var(--t-sm); padding: 8px 11px; color: var(--ink);
+  background: var(--surface-3); border: 1px solid var(--line-strong); border-radius: var(--r-sm); }
+.sc-input input:focus { outline: none; border-color: var(--live-line); box-shadow: var(--glow-live); }
+.sc-input button { flex: none; width: 36px; border-radius: var(--r-sm); border: 1px solid var(--live-deep);
+  background: var(--live); color: var(--on-accent); cursor: pointer; display: grid; place-items: center; }
+.sc-input button:disabled { opacity: .5; cursor: default; }
+.sc-input button svg { width: 16px; height: 16px; }
 
 /* ---------- Threads of light ---------- */
 .thread-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;

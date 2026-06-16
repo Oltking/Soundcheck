@@ -13,6 +13,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { INSTRUMENTS, SevChip, SevGlyph, sevKind, Icon } from "@/components/glyphs";
 import { MentionText } from "@/components/mention-text";
+import { StageChat } from "@/components/stage-chat";
 import type { FindingEntry, TimelineItem } from "@/lib/types";
 
 const SEAT_W = 152, SEAT_H = 92;   // compact seated card (layout footprint)
@@ -164,12 +165,15 @@ export function StageView({
     setSpot((s) => (players.length ? Math.min(s, players.length - 1) : 0));
   }, [players.length]);
 
+  // Auto-rotate ONLY on a finished/replay run (to show each player in turn).
+  // On a LIVE stage there is no timer — the spotlight follows real activity below.
   useEffect(() => {
-    if (pinned || players.length < 2) return;
+    if (live || pinned || players.length < 2) return;
     const iv = setInterval(() => setSpot((s) => (s + 1) % players.length), 3800);
     return () => clearInterval(iv);
-  }, [pinned, players.length]);
+  }, [live, pinned, players.length]);
 
+  // Live: the spotlight moves to whoever just performed, as they come in.
   useEffect(() => {
     if (live && !pinned && latestIdx >= 0) setSpot(latestIdx);
   }, [live, pinned, latestIdx]);
@@ -254,7 +258,7 @@ export function StageView({
             <div className="stage-mobile">
               {current && (
                 <div className="player spotlit m-spot">
-                  <SpotlightInner player={current} pinned={pinned} names={mentionNames} />
+                  <SpotlightInner player={current} pinned={pinned} names={mentionNames} live={live} />
                 </div>
               )}
               <div className="m-rail">
@@ -283,6 +287,7 @@ export function StageView({
                     receded={players.length > 1 && i !== spot}
                     pinned={pinned && i === spot}
                     names={mentionNames}
+                    live={live}
                     onClick={() => pickSeat(i)}
                   />
                 ))}
@@ -297,14 +302,45 @@ export function StageView({
 
         <ScoreRail findings={findings} />
       </div>
+      <StageChat roomId={roomId} initialTimeline={timeline} />
     </div>
     </>
   );
 }
 
-function SpotlightInner({ player, pinned, names }: { player: Player; pinned: boolean; names: string[] }) {
+// Live "being written" effect — reveals text word by word, keeping the column
+// pinned to the bottom as it types (only used on a LIVE stage).
+function Typewriter({ text, scrollRef }: { text: string; scrollRef: { current: HTMLDivElement | null } }) {
+  const words = useMemo(() => text.split(/(\s+)/), [text]);
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    setN(0);
+    if (words.length === 0) return;
+    const id = setInterval(() => setN((v) => (v >= words.length ? (clearInterval(id), v) : v + 1)), 85);
+    return () => clearInterval(id);
+  }, [words]);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [n, scrollRef]);
+  return <>{words.slice(0, n).join("")}{n < words.length && <span className="tw-caret" />}</>;
+}
+
+function SpotlightInner({ player, pinned, names, live }: {
+  player: Player; pinned: boolean; names: string[]; live: boolean;
+}) {
   const Inst = INSTRUMENTS[player.inst];
   const handle = "@" + player.name.toLowerCase().replace(/\s+/g, "-");
+  const nowRef = useRef<HTMLDivElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
+
+  // chat-style: start scrolled to the BOTTOM (the newest), and stay there as
+  // new says/events arrive — for both live and finished runs.
+  useEffect(() => {
+    if (nowRef.current) nowRef.current.scrollTop = nowRef.current.scrollHeight;
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
+  }, [player.name, player.says.length, player.activity.length]);
+
   return (
     <>
       <div className="p-top">
@@ -327,27 +363,32 @@ function SpotlightInner({ player, pinned, names }: { player: Player; pinned: boo
       </div>
       <div className="p-body">
         {/* left column — the SAY (the chat) */}
-        <div className="p-now">
+        <div className="p-now" ref={nowRef}>
           <span className="now-k mono">say · the chat</span>
           {player.says.length === 0 ? (
             <div className="say-line">— standing by —</div>
           ) : (
             <div className="say-stream">
-              {player.says.map((s, i) => (
-                <div className={"say-line" + (i === player.says.length - 1 ? " latest" : "")} key={i}>
-                  <MentionText text={s.text} mentions={names} />
-                </div>
-              ))}
+              {player.says.map((s, i) => {
+                const latest = i === player.says.length - 1;
+                return (
+                  <div className={"say-line" + (latest ? " latest" : "")} key={i}>
+                    {live && latest
+                      ? <Typewriter text={s.text} scrollRef={nowRef} />
+                      : <MentionText text={s.text} mentions={names} />}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
-        {/* right column — the rest of the events (think, tasks, tools) */}
-        <div className="p-log">
+        {/* right column — the rest of the events (think, tasks, tools), newest at bottom */}
+        <div className="p-log" ref={logRef}>
           <span className="now-k mono">events</span>
           {player.activity.length === 0 ? (
             <div className="logline">— no events yet —</div>
           ) : (
-            player.activity.slice().reverse().map((ln, i) => (
+            player.activity.map((ln, i) => (
               <div className="logline" key={i}><span className="k">{ln[0]}</span> {ln[1]}</div>
             ))
           )}
@@ -379,10 +420,10 @@ function SeatInner({ player }: { player: Player }) {
 }
 
 function PlayerCard({
-  player, seat, spot, spotlit, receded, pinned, names, onClick,
+  player, seat, spot, spotlit, receded, pinned, names, live, onClick,
 }: {
   player: Player; seat: Seat; spot: Layout["spot"];
-  spotlit: boolean; receded: boolean; pinned: boolean; names: string[]; onClick: () => void;
+  spotlit: boolean; receded: boolean; pinned: boolean; names: string[]; live: boolean; onClick: () => void;
 }) {
   const cls = `player ${player.status} ${spotlit ? "spotlit" : ""} ${receded ? "receded" : ""}`;
   const style = spotlit
@@ -391,7 +432,7 @@ function PlayerCard({
   return (
     <div className={cls} style={style} onClick={onClick}
       title={spotlit ? "Click to release the spotlight" : "Click to spotlight"}>
-      {spotlit ? <SpotlightInner player={player} pinned={pinned} names={names} /> : <SeatInner player={player} />}
+      {spotlit ? <SpotlightInner player={player} pinned={pinned} names={names} live={live} /> : <SeatInner player={player} />}
     </div>
   );
 }

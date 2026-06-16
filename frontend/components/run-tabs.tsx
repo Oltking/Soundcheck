@@ -7,7 +7,6 @@ const TABS = [
   { seg: "stage", label: "The Stage" },
   { seg: "findings", label: "Findings" },
   { seg: "conductor", label: "The Conductor" },
-  { seg: "ask", label: "Ask the band" },
   { seg: "tape", label: "Master Tape" },
 ];
 
