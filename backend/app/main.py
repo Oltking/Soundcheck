@@ -32,7 +32,10 @@ from fastapi.middleware.cors import CORSMiddleware
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 load_dotenv(REPO_ROOT / ".env")
 
-from . import db, projection  # noqa: E402
+from . import band_reader, db, projection  # noqa: E402
+
+# Live "Ask the band" chat sessions, keyed by room — one run_chat.py per room.
+_chat_sessions: dict[str, subprocess.Popen] = {}
 
 
 @asynccontextmanager
@@ -81,6 +84,44 @@ async def remediate(room_id: str, file: str, finding: str, repo_url: str | None 
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return {"status": "remediation_started",
             "note": "watch the Conductor for the proposed patch, then approve to open the PR"}
+
+
+def _run_context(room_id: str) -> str:
+    """A compact, factual summary of the run for Customer Service to answer from."""
+    rows = _rows("SELECT content FROM ledger WHERE room_id=? AND kind='Finding'", room_id)
+    ctrls = _rows("SELECT content FROM ledger WHERE room_id=? AND kind='ControlMapping'", room_id)
+    if not rows:
+        return "No findings have been recorded for this run yet."
+    titles = [(r["content"] or "").split("\n")[0][:90] for r in rows[:8]]
+    frameworks = sorted({(c["content"] or "").split(" ")[0] for c in ctrls if c["content"]})
+    bits = [f"{len(rows)} findings recorded", f"{len(ctrls)} control mappings"]
+    if frameworks:
+        bits.append("frameworks: " + ", ".join(frameworks[:4]))
+    return ". ".join(bits) + ". Findings include: " + "; ".join(titles)
+
+
+@app.post("/runs/{room_id}/ask")
+async def ask(room_id: str, question: str) -> dict:
+    """Ask the band a question. If a Customer Service session is already live on the
+    room, relay the question straight in (via the Stage Manager). Otherwise launch
+    a session and hand it the first question — it relays once CS has joined and
+    subscribed (agents must be started before being added to a room). The run facts
+    are attached so CS can answer even on a fresh join. The frontend polls the
+    timeline for the answer (which may route to a specialist)."""
+    context = _run_context(room_id)
+    proc = _chat_sessions.get(room_id)
+    warm = proc is not None and proc.poll() is None
+    if warm:
+        ok = await band_reader.relay_question(room_id, question, context)
+        if not ok:
+            raise HTTPException(502, "could not relay the question to Customer Service")
+        return {"status": "asked", "cold_start": False}
+
+    cmd = [sys.executable, str(REPO_ROOT / "scripts" / "run_chat.py"),
+           "--room-id", room_id, "--question", question, "--context", context]
+    _chat_sessions[room_id] = subprocess.Popen(
+        cmd, cwd=str(REPO_ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return {"status": "asked", "cold_start": True}
 
 
 # -- projection refresh ----------------------------------------------------

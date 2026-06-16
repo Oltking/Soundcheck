@@ -70,6 +70,12 @@ WORKFORCE: dict[str, tuple[str, str]] = {
         "room (kickoffs, run metadata) on behalf of the orchestration backend. "
         "Does not reason or scan.",
     ),
+    "customer_service": (
+        "Customer Service",
+        "The front desk. Answers the Conductor's questions about a run in plain "
+        "language from the recorded findings and ledger, and routes anything that "
+        "needs domain reasoning to the responsible specialist via @mention.",
+    ),
 }
 
 CONFIG_PATH = ROOT / "agent_config.yaml"

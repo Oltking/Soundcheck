@@ -89,6 +89,17 @@ def heavy_llm(**kwargs):
     return frontier_llm(FRONTIER_HEAVY_MODEL, **kwargs)
 
 
+# Cheapest verified AI/ML model — the front-desk / Q&A lane (Customer Service).
+SUPPORT_MODEL = "deepseek-chat"
+
+
+def support_llm(**kwargs):
+    """AI/ML lane on the CHEAPEST tier (DeepSeek-chat) — the Customer Service
+    concierge that fields the Conductor's questions about a run. High volume,
+    conversational; never used for security reasoning or patching."""
+    return frontier_llm(SUPPORT_MODEL, **kwargs)
+
+
 def oss_llm(model: str = OSS_DEFAULT_MODEL, **kwargs):
     """ChatOpenAI routed to Featherless — high-volume roles
     (Scout ingest, scanner formatting, status)."""

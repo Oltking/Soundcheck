@@ -34,6 +34,9 @@ export const api = {
   remediate: (id: string, file: string, finding: string) =>
     post<{ status: string }>(
       `/runs/${id}/remediate?file=${encodeURIComponent(file)}&finding=${encodeURIComponent(finding)}`),
+  ask: (id: string, question: string) =>
+    post<{ status: string; cold_start: boolean }>(
+      `/runs/${id}/ask?question=${encodeURIComponent(question)}`),
 };
 
 export { BASE as BFF_BASE };

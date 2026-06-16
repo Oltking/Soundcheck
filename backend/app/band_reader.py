@@ -24,8 +24,41 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 # Every agent whose context might contain part of a run's timeline.
 WORKFORCE = [
     "stage_manager", "bandleader", "scout", "code_scanner", "dependencies",
-    "secrets_config", "compliance_mapper", "fixer", "reviewer",
+    "secrets_config", "compliance_mapper", "fixer", "reviewer", "customer_service",
 ]
+
+
+def _agent_id(name: str) -> str | None:
+    cfg = yaml.safe_load((REPO_ROOT / "agent_config.yaml").read_text()) or {}
+    return (cfg.get(name) or {}).get("agent_id")
+
+
+def relay_text(question: str, context: str = "") -> str:
+    """The exact message the Stage Manager posts to relay a question, with the run
+    facts appended so Customer Service can answer even on a fresh join."""
+    base = f"@Customer Service the Conductor asks: {question}"
+    return f"{base}\n\n[Run facts you may use: {context}]" if context else base
+
+
+async def relay_question(room_id: str, question: str, context: str = "") -> bool:
+    """Post the Conductor's question into the room as the Stage Manager, @mentioning
+    Customer Service (the Human API is gated, so the human can't post directly).
+    Customer Service — kept live by scripts/run_chat.py — answers in the room."""
+    keys = _agent_keys()
+    sm_key = keys.get("stage_manager")
+    cs_id = _agent_id("customer_service")
+    if not sm_key or not cs_id:
+        return False
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.post(
+            f"{_rest_url()}/api/v1/agent/chats/{room_id}/messages",
+            headers={"X-API-Key": sm_key},
+            json={"message": {
+                "content": relay_text(question, context),
+                "mentions": [{"id": cs_id, "name": "Customer Service"}],
+            }},
+        )
+        return r.status_code in (200, 201)
 
 
 def _rest_url() -> str:
