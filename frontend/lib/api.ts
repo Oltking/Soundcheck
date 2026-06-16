@@ -31,6 +31,9 @@ export const api = {
   refreshOne: (id: string) => post<unknown>(`/runs/${id}/refresh`),
   startRun: (target?: string) =>
     post<{ status: string }>(`/runs/start${target ? `?target=${encodeURIComponent(target)}` : ""}`),
+  remediate: (id: string, file: string, finding: string) =>
+    post<{ status: string }>(
+      `/runs/${id}/remediate?file=${encodeURIComponent(file)}&finding=${encodeURIComponent(finding)}`),
 };
 
 export { BASE as BFF_BASE };

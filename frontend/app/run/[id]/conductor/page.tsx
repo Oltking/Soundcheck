@@ -1,6 +1,7 @@
 import { api, BFF_BASE } from "@/lib/api";
 import { Icon, SevGlyph } from "@/components/glyphs";
 import { CopyLink } from "@/components/copy-link";
+import { ApproveAction } from "@/components/approve-action";
 import type { ProvenanceNode } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -60,14 +61,16 @@ export default async function RunConductor({ params }: { params: Promise<{ id: s
       <div className={`seal ${approved ? "approved" : "pending"}`}>
         <div className="seal-mark">{approved ? <SevGlyph kind="approved" /> : <Icon name="clock" />}</div>
         <div className="seal-body">
-          <div className="seal-state">{approved ? "Approved" : "Awaiting the Conductor"}</div>
+          <div className="seal-state">{approved ? "Approved" : "Awaiting your approval"}</div>
           <div className="seal-meta mono">
             {approved
               ? <>{(approval!.tags.find((t) => t.startsWith("approver:")) || "approver:you").split(":")[1]} · {fmt(approval!.created_at)}</>
-              : <>reply <b>@Stage Manager APPROVE</b> in the Band room to authorize</>}
+              : <>you hold the baton — nothing ships until you authorize</>}
           </div>
         </div>
       </div>
+
+      {!approved && (patch || review) && <ApproveAction roomId={id} />}
 
       {patch && (
         <section className="gov-card">

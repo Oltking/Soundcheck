@@ -51,7 +51,7 @@ export default function Marketing() {
         <div className="mk-hero-inner">
           <div className="mk-eyebrow"><span className="dot" /> Built on Band · Band of Agents</div>
           <h1 className="mk-h1">
-            Audit. Fix.<br /><span className="ital">Prove&nbsp;it.</span>
+            Audit. Fix.<br /><span className="ital">Live on&nbsp;stage.</span>
           </h1>
           <p className="mk-sub">
             Soundcheck is a governed, replayable autonomous workforce for security &amp; compliance.

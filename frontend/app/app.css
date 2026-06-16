@@ -127,6 +127,16 @@
 .finding-card .ctrl { font-family: var(--mono); background: var(--paper-well); padding: 2px 7px;
   border-radius: var(--r-xs); color: var(--ink-2); }
 .finding-card .by { font-family: var(--mono); }
+.fc-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--s3);
+  margin-top: var(--s3); padding-top: var(--s3); border-top: 1px solid var(--line-soft); }
+.fc-file { font-size: var(--t-xs); color: var(--ink-3); margin-right: auto; }
+.fix-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: var(--r-sm);
+  border: 1px solid var(--live-line); background: var(--live-tint); color: var(--live-deep);
+  font: inherit; font-size: var(--t-sm); font-weight: 600; cursor: pointer; transition: background .15s, transform .15s; }
+.fix-btn svg { width: 14px; height: 14px; }
+.fix-btn:hover:not(:disabled) { background: var(--live); color: var(--on-accent); transform: translateY(-1px); }
+.fix-btn:disabled { opacity: .55; cursor: default; }
+.fix-btn.done { background: var(--approved-tint); border-color: var(--approved-line); color: var(--approved); }
 
 .empty { text-align: center; color: var(--ink-3); padding: var(--s8) var(--s4); }
 .empty svg { width: 36px; height: 36px; opacity: .5; }
@@ -165,6 +175,19 @@
 .seal.pending .seal-state { color: var(--attention); }
 .seal-meta { font-size: var(--t-xs); color: var(--ink-2); margin-top: 2px; }
 .seal-meta b { color: var(--ink); }
+
+/* in-site approval */
+.approve { background: var(--attention-tint); border: 1px solid var(--attention-line); border-radius: var(--r-lg);
+  padding: var(--s4) var(--s5); margin-bottom: var(--s4); }
+.approve-steps { display: flex; flex-wrap: wrap; gap: var(--s4); margin-bottom: var(--s3); }
+.approve-step { font-size: var(--t-xs); color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+.approve-step b { width: 18px; height: 18px; border-radius: 50%; background: var(--ink); color: var(--on-accent);
+  display: grid; place-items: center; font-size: 10px; }
+.approve-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.approve-msg { font-size: var(--t-xs); color: var(--ink-2); background: var(--surface);
+  border: 1px dashed var(--line-strong); border-radius: var(--r-sm); padding: 5px 9px; }
+.approve-note { font-size: var(--t-xs); color: var(--ink-2); margin-top: var(--s3); }
+.approve-note b { color: var(--attention); }
 
 .gov-card { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-lg);
   padding: var(--s4) var(--s5); margin-bottom: var(--s4); box-shadow: var(--shadow-xs); }
@@ -368,6 +391,35 @@
 .run-counts-row .rcount { display: inline-flex; align-items: baseline; gap: 5px; font-size: var(--t-xs);
   color: var(--ink-3); }
 .run-counts-row .rcount b { font-size: var(--t-sm); color: var(--ink); font-weight: 650; }
+
+/* run lifecycle progress strip — always shows the next action */
+.run-progress { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 var(--s4); }
+.rp-step { display: inline-flex; align-items: center; gap: 7px; text-decoration: none;
+  font-size: var(--t-xs); font-weight: 600; color: var(--ink-3); padding: 5px 12px 5px 6px;
+  border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--surface-2); }
+.rp-step:not(:last-child)::after { content: ""; }
+.rp-dot { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 10px; background: var(--paper-well); color: var(--ink-3); border: 1px solid var(--line); }
+.rp-dot svg { width: 11px; height: 11px; }
+.rp-step.done { color: var(--approved); border-color: var(--approved-line); background: var(--approved-tint); }
+.rp-step.done .rp-dot { background: var(--approved); color: #fff; border-color: var(--approved); }
+.rp-step.current { color: var(--live-deep); border-color: var(--live-line); background: var(--live-tint);
+  box-shadow: var(--glow-live); }
+.rp-step.current .rp-dot { background: var(--live); color: var(--on-accent); border-color: var(--live); }
+.rp-step:hover { transform: translateY(-1px); }
+
+/* "audit complete" banner on the Stage */
+.stage-done { display: flex; align-items: center; gap: var(--s3); text-decoration: none;
+  margin-bottom: var(--s4); padding: var(--s3) var(--s4); border-radius: var(--r-lg);
+  background: var(--approved-tint); border: 1px solid var(--approved-line); color: var(--ink); }
+.stage-done .sd-ico { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface-2); color: var(--approved); flex: none; }
+.stage-done .sd-ico svg { width: 13px; height: 13px; }
+.stage-done .sd-text { font-size: var(--t-sm); }
+.stage-done .sd-text b { color: var(--approved); }
+.stage-done .sd-cta { margin-left: auto; display: inline-flex; align-items: center; gap: 2px;
+  font-size: var(--t-sm); font-weight: 600; color: var(--live-deep); white-space: nowrap; }
+.stage-done .sd-cta svg { width: 15px; height: 15px; }
 .run-tabs { display: inline-flex; background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--r-pill); padding: 3px; gap: 2px; }
 .run-tabs a { padding: 6px 14px; border-radius: var(--r-pill); text-decoration: none; color: var(--ink-2);

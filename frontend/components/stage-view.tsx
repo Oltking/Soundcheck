@@ -9,6 +9,7 @@
 // above a tappable rail of the seated band.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { INSTRUMENTS, SevChip, SevGlyph, sevKind, Icon } from "@/components/glyphs";
 import { MentionText } from "@/components/mention-text";
@@ -215,7 +216,21 @@ export function StageView({
 
   const current = players[spot];
 
+  // "audit complete" once findings exist and the band has gone quiet (or it's a
+  // finished, non-live run) — a clear cue + next step instead of dead air.
+  const lastTs = timeline.length ? new Date(timeline[timeline.length - 1].created_at || 0).getTime() : 0;
+  const idle = lastTs > 0 && Date.now() - lastTs > 25000;
+  const auditDone = findings.length > 0 && (!live || idle);
+
   return (
+    <>
+    {auditDone && (
+      <Link href={`/run/${roomId}/findings`} className="stage-done">
+        <span className="sd-ico"><SevGlyph kind="approved" /></span>
+        <span className="sd-text"><b>Audit complete.</b> {findings.length} findings flagged — review them, then propose a fix.</span>
+        <span className="sd-cta">Review findings <Icon name="chevron" /></span>
+      </Link>
+    )}
     <div className="stage-region">
       <div className="stage-head">
         <div className="title">The Stage<span>the live workforce · {players.length} players</span></div>
@@ -283,6 +298,7 @@ export function StageView({
         <ScoreRail findings={findings} />
       </div>
     </div>
+    </>
   );
 }
 

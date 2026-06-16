@@ -1,11 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&display=swap');
+
 /* ============================================================
-   Soundcheck — marketing site (cinematic dark)
-   Lives at "/". Original SVG/CSS art + sparing free-license photo
-   texture (public/img, see CREDITS.md). Self-contained: classes are
-   namespaced .mk / .hs so they can't touch the app.
+   Soundcheck — marketing site (light · white/cream/blue)
+   Lives at "/". Original SVG/CSS art. Typography: headlines in
+   Bricolage Grotesque (characterful display), body in Inter Tight,
+   the italic accent in Instrument Serif. Namespaced .mk / .hs.
    ============================================================ */
 
-.mk { max-width: 1240px; margin: 0 auto; padding: 0 var(--s5); overflow: clip; }
+.mk { max-width: 1240px; margin: 0 auto; padding: 0 var(--s5); overflow: clip;
+  --mk-display: 'Fraunces', Georgia, 'Times New Roman', serif; }
+
+/* headlines get the mature serif; body, labels and the logo stay Inter Tight */
+.mk-h1, .mk-sec-head h2, .mk-split-copy h2, .mk-final h2,
+.mk-stat b, .mk-step-title, .mk-seal-state {
+  font-family: var(--mk-display); font-optical-sizing: auto;
+}
 
 /* ---------- header ---------- */
 .mk-head { position: sticky; top: 0; z-index: 60;
@@ -55,9 +64,10 @@
 .mk-eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--live-bright);
   box-shadow: 0 0 0 0 var(--live-glow); animation: mkpulse 2.4s var(--ease) infinite; }
 @keyframes mkpulse { 0%,100% { box-shadow: 0 0 0 0 var(--live-glow); } 50% { box-shadow: 0 0 0 6px transparent; } }
-.mk-h1 { font-size: var(--t-mega); line-height: 0.96; letter-spacing: -0.04em; font-weight: 800;
+.mk-h1 { font-size: var(--t-mega); line-height: 1.0; letter-spacing: -0.02em; font-weight: 600;
   margin: var(--s4) 0 var(--s4); }
-.mk-h1 .ital { font-family: var(--display); font-weight: 400; font-style: italic; letter-spacing: -0.01em;
+.mk-h1 .ital { font-family: 'Fraunces', Georgia, serif; font-optical-sizing: auto;
+  font-weight: 500; font-style: italic; letter-spacing: -0.01em;
   background: linear-gradient(100deg, var(--live-bright), var(--live) 55%, var(--live-deep));
   -webkit-background-clip: text; background-clip: text; color: transparent; }
 .mk-sub { font-size: var(--t-h3); color: var(--ink-2); line-height: 1.6; max-width: 54ch; margin: 0 0 var(--s5); }

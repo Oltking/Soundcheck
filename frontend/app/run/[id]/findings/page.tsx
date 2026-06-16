@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { Icon, SevChip, SevGlyph, sevKind, type SevKind } from "@/components/glyphs";
+import { FixButton } from "@/components/fix-button";
 import type { FindingEntry } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,13 @@ function sevClass(sev: string): string {
   return k === "critical" ? "crit" : k === "attention" ? "att" : "inf";
 }
 
+// Best-effort file location from a finding's content (e.g. "app.py:23" → app.py).
+const FILE_RE = /([A-Za-z0-9_./-]+\.[A-Za-z0-9]{1,8})(?::\d+)?/;
+function fileOf(f: FindingEntry): string {
+  const m = FILE_RE.exec(f.content || "");
+  return m ? m[1] : "";
+}
+
 // Severity groups, in the order they should be read.
 const GROUPS: { kind: SevKind; heading: string; blurb: string }[] = [
   { kind: "critical", heading: "High severity", blurb: "fix first — exploitable or sensitive" },
@@ -16,9 +24,10 @@ const GROUPS: { kind: SevKind; heading: string; blurb: string }[] = [
   { kind: "info", heading: "Informational", blurb: "hygiene and lower-risk notes" },
 ];
 
-function FindingCard({ f }: { f: FindingEntry }) {
+function FindingCard({ f, roomId }: { f: FindingEntry; roomId: string }) {
   const title = (f.content || "").split("\n")[0];
   const evidence = (f.content || "").split("\n").slice(1).join(" ");
+  const file = fileOf(f);
   return (
     <div className={`finding-card ${sevClass(f.severity)}`}>
       <div className="fc-top">
@@ -32,6 +41,10 @@ function FindingCard({ f }: { f: FindingEntry }) {
           <span key={c.id} className="ctrl">{(c.content || "").replace("\n", " ")}</span>
         ))}
         {f.sender && <span className="by">@{f.sender}</span>}
+      </div>
+      <div className="fc-actions">
+        {file && <span className="fc-file mono">{file}</span>}
+        <FixButton roomId={roomId} file={file} finding={title} />
       </div>
     </div>
   );
@@ -86,7 +99,7 @@ export default async function RunFindings({ params }: { params: Promise<{ id: st
             <span className="fg-count tnum">{buckets[g.kind].length}</span>
             <span className="fg-blurb">{g.blurb}</span>
           </div>
-          {buckets[g.kind].map((f) => <FindingCard key={f.id} f={f} />)}
+          {buckets[g.kind].map((f) => <FindingCard key={f.id} f={f} roomId={id} />)}
         </section>
       ))}
     </div>

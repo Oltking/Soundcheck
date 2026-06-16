@@ -68,6 +68,21 @@ async def start_run(target: str | None = None) -> dict:
     return {"status": "started", "note": "poll POST /runs/refresh to discover the new room"}
 
 
+@app.post("/runs/{room_id}/remediate")
+async def remediate(room_id: str, file: str, finding: str, repo_url: str | None = None) -> dict:
+    """Launch the remediation loop (Fixer -> Reviewer -> human approval -> PR) for a
+    finding, in the existing run room. Detached, like start_run — the Conductor screen
+    then shows the proposed patch and the approval gate. Spends model tokens."""
+    cmd = [sys.executable, str(REPO_ROOT / "scripts" / "run_remediation.py"),
+           "--room-id", room_id, "--file", file, "--finding", finding]
+    if repo_url:
+        cmd += ["--repo-url", repo_url]
+    subprocess.Popen(cmd, cwd=str(REPO_ROOT),
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return {"status": "remediation_started",
+            "note": "watch the Conductor for the proposed patch, then approve to open the PR"}
+
+
 # -- projection refresh ----------------------------------------------------
 
 @app.post("/runs/refresh")
