@@ -45,8 +45,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Soundcheck BFF", version="0.4.0", lifespan=lifespan)
+# Allowed browser origins — set ALLOWED_ORIGINS (comma-separated) on the BFF host
+# to include the deployed frontend, e.g. "https://soundcheck.vercel.app".
+import os  # noqa: E402
+
+_origins = [o.strip() for o in os.environ.get(
+    "ALLOWED_ORIGINS", "http://localhost:3000").split(",") if o.strip()]
 app.add_middleware(
-    CORSMiddleware, allow_origins=["http://localhost:3000"],
+    CORSMiddleware, allow_origins=_origins,
     allow_methods=["*"], allow_headers=["*"],
 )
 
