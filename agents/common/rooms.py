@@ -64,6 +64,10 @@ class AgentRooms:
             f"/chats/{chat_id}/participants",
             json={"participant": {"participant_id": participant_id, "role": role}},
         )
+        # 409 = already a participant. That's fine — re-running a fix on an existing
+        # room must be idempotent, not crash the whole remediation loop.
+        if r.status_code == 409:
+            return {"participant_id": participant_id, "role": role, "already_member": True}
         r.raise_for_status()
         return r.json()["data"]
 

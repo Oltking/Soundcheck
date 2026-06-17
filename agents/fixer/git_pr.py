@@ -70,9 +70,12 @@ def open_pr(
     NEVER merges. Requires GITHUB_TOKEN with contents+pull-request write."""
     token = os.environ["GITHUB_TOKEN"]
     if repo_path:
-        # push the local branch using the token
+        # push the local branch using the token. Plain --force (not --force-with-lease):
+        # a fresh isolated clone has no remote-tracking ref for our unique run branch,
+        # which makes --force-with-lease reject with "stale info". The branch is our own
+        # throwaway, so an unconditional push is correct and safe.
         remote = f"https://x-access-token:{token}@github.com/{repo_full_name}.git"
-        _run(["git", "push", remote, f"{branch}:{branch}", "--force-with-lease"], repo_path.resolve())
+        _run(["git", "push", remote, f"{branch}:{branch}", "--force"], repo_path.resolve())
 
     from github import Github
 

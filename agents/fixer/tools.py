@@ -10,6 +10,7 @@ findings reach the Fixer. Defensive only — the Fixer fixes, never writes explo
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 from common.repo_tools import read_file
@@ -34,8 +35,11 @@ def make_fixer_tools(repo: Path, score, state: dict):
         fresh branch, commit it, and record a PatchProposal. `summary` is a one-line
         commit subject; `rationale` is WHY this fix is correct and safe; `finding_id`
         is the Score id of the finding being remediated. Returns the diff to review."""
+        # Unique per run so re-fixing a file never collides with an existing remote
+        # branch / open PR (which broke the push and the create_pull).
         slug = path.replace("/", "-").replace("\\", "-").replace(".", "-")
-        branch = f"soundcheck/fix-{slug}"
+        stamp = datetime.now(timezone.utc).strftime("%m%d-%H%M%S")
+        branch = f"soundcheck/fix-{slug}-{stamp}"
         result = apply_patch(repo, branch, {path: fixed_content},
                              f"fix: {summary} [{path}]")
         entry = await score.write(
