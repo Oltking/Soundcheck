@@ -261,6 +261,13 @@ export function StageView({
   const review = ledger.ReviewResult?.[0];
   const approval = ledger.Approval?.[0];
   const verdict = (review?.tags.find((t) => t.startsWith("verdict:")) || "verdict:—").split(":")[1];
+  // for "send them back in": recover the file + finding the patch was for
+  const patchFile = (patch?.content || "").match(/Files:\s*([^\n,]+)/)?.[1]?.trim() || "";
+  const reFinding =
+    findings.find((f) => (patch?.refs || []).includes(f.id)) ;
+  const reFindingText = reFinding
+    ? (reFinding.content || "").split("\n")[0]
+    : (patch?.content || "").split("\n")[0];
 
   return (
     <>
@@ -281,11 +288,18 @@ export function StageView({
         <ApproveAction roomId={roomId} />
       </div>
     ) : review ? (
-      <div className="stage-remedy working">
-        <span className="sr-ico"><Icon name="handoff" /></span>
-        <span className="sr-text">
-          <b>The Reviewer requested changes</b> <span className={`verdict v-${verdict}`}>{verdict?.toUpperCase()}</span> — the patch did not pass cross-model review, so no sign-off was requested. Propose a fix again to retry.
-        </span>
+      <div className="stage-remedy pending">
+        <div className="sr-line">
+          <span className="sr-ico"><Icon name="handoff" /></span>
+          <span className="sr-text">
+            <b>The Reviewer requested changes</b> <span className={`verdict v-${verdict}`}>{verdict?.toUpperCase()}</span> — the patch did not pass cross-model review, so no sign-off was requested. Send the band back in and the Fixer will revise it with the Reviewer&apos;s feedback.
+          </span>
+        </div>
+        {patchFile && (
+          <FixButton roomId={roomId} file={patchFile} finding={reFindingText}
+            label="Send them back in" sentLabel="On it — the Fixer is revising"
+            onProposed={() => { setLiveOn(true); setJustProposed(true); }} />
+        )}
       </div>
     ) : patch ? (
       <div className="stage-remedy working">

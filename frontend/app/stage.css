@@ -342,3 +342,5 @@
   .encore-mix { gap: var(--s4); }
   .bow-grid { grid-template-columns: 1fr; }
 }
+
+.encore-open-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s3); }

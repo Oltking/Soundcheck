@@ -12,13 +12,15 @@ import { api } from "@/lib/api";
 import { Icon } from "@/components/glyphs";
 
 export function FixButton({
-  roomId, file, finding, compact = false, onProposed,
+  roomId, file, finding, compact = false, onProposed, label = "Propose a fix", sentLabel,
 }: {
   roomId: string;
   file: string;
   finding: string;
   compact?: boolean;
   onProposed?: () => void; // when on the Stage: watch live in place, don't navigate
+  label?: string;          // override the idle label (e.g. "Send them back in")
+  sentLabel?: string;      // override the confirmation label
 }) {
   const router = useRouter();
   const [state, setState] = useState<"idle" | "starting" | "sent" | "error">("idle");
@@ -42,7 +44,7 @@ export function FixButton({
     return (
       <button className={`${cls} done`} disabled>
         <Icon name="check" />
-        {onProposed ? "Fix proposed — watch the band" : "Fix proposed — opening the Stage…"}
+        {sentLabel || (onProposed ? "Sent — watch the band" : "Sent — opening the Stage…")}
       </button>
     );
   }
@@ -50,7 +52,7 @@ export function FixButton({
     <button className={cls} onClick={propose} disabled={state === "starting" || !file}
       title={file ? `Remediate ${file}` : "No file location on this finding"}>
       <Icon name={state === "starting" ? "clock" : "handoff"} />
-      {state === "starting" ? "Sending the Fixer…" : state === "error" ? "Retry — couldn’t start" : "Propose a fix"}
+      {state === "starting" ? "Sending the Fixer…" : state === "error" ? "Retry — couldn’t start" : label}
     </button>
   );
 }

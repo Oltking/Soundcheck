@@ -66,6 +66,9 @@ async def main() -> None:
                     "in the /calc route — allows arbitrary code execution.")
     ap.add_argument("--room-id", default=None)
     ap.add_argument("--timeout", type=int, default=600)
+    ap.add_argument("--max-rounds", type=int, default=2,
+                    help="how many times the Fixer may revise after a 'revise' verdict "
+                         "before the loop gives up (the continue-the-work loop)")
     args = ap.parse_args()
 
     repo, repo_full = clone_target(args.repo_url)
@@ -103,48 +106,67 @@ async def main() -> None:
     rooms = {n: AgentRooms(agent_credentials(n)[1]) for n in ("fixer", "reviewer", "stage_manager")}
 
     try:
-        # -- dispatch the Fixer with one eligible finding ----------------------
-        # Mention ONLY the Fixer — the Reviewer must not wake until a patch exists
-        # (the Fixer summons it). Mentioning both made the Reviewer review nothing.
-        await sm.send_message(
-            chat_id,
-            f"@Fixer remediate this finding in `{args.file}` (high confidence, low "
-            f"risk, eligible for auto-fix): {args.finding} When your patch is ready, "
-            f"hand it to the Reviewer for review.",
-            mentions=[{"id": fixer_p["id"], "name": "Fixer"}],
-        )
-        print(f"[dispatch] Fixer assigned the finding at {datetime.now(timezone.utc):%H:%M:%SZ}\n")
+        # -- the continue-the-work loop: Fixer proposes, Reviewer judges; on a
+        # 'revise' verdict the Fixer goes again WITH the Reviewer's feedback, up to
+        # --max-rounds, instead of dead-ending. Mention ONLY the Fixer — the Reviewer
+        # must not wake until a patch exists (the Fixer summons it).
+        proposal = review = None
+        feedback: str | None = None
+        for rnd in range(1, args.max_rounds + 1):
+            state.pop("review", None)
+            state.pop("_announced", None)
+            if feedback:
+                dispatch = (
+                    f"@Fixer your previous patch on `{args.file}` was sent back by the "
+                    f"Reviewer. Feedback: {feedback} Revise the fix to address it, then "
+                    f"hand it to the Reviewer again. Finding: {args.finding}"
+                )
+                print(f"[dispatch] round {rnd}/{args.max_rounds} — Fixer revising with reviewer feedback")
+            else:
+                dispatch = (
+                    f"@Fixer remediate this finding in `{args.file}` (high confidence, low "
+                    f"risk, eligible for auto-fix): {args.finding} When your patch is ready, "
+                    f"hand it to the Reviewer for review."
+                )
+                print(f"[dispatch] round {rnd}/{args.max_rounds} — Fixer assigned the finding "
+                      f"at {datetime.now(timezone.utc):%H:%M:%SZ}")
+            await sm.send_message(chat_id, dispatch,
+                                  mentions=[{"id": fixer_p["id"], "name": "Fixer"}])
 
-        # -- wait for proposal + review ----------------------------------------
-        for _ in range(args.timeout // 5):
-            await asyncio.sleep(5)
-            if state.get("review"):
+            # -- wait for this round's proposal + review -----------------------
+            for _ in range(args.timeout // 5):
+                await asyncio.sleep(5)
+                if state.get("review"):
+                    break
+                if state.get("proposal") and not state.get("_announced"):
+                    p = state["proposal"]
+                    print(f"[fixer] patch proposed on {p['branch']} ({len(p['diff'])} chars of diff)")
+                    state["_announced"] = True
+            review = state.get("review")
+            proposal = state.get("proposal")
+            if not proposal:
+                print("[result] Fixer produced no patch (finding may be unsafe to auto-fix). Stopping.")
+                return
+            if not review:
+                print("[result] No review recorded within timeout. Stopping — no PR.")
+                return
+            print(f"[reviewer] round {rnd} verdict={review['verdict'].upper()} — {review['reasoning'][:120]}")
+            if review["verdict"] == "pass":
                 break
-            if state.get("proposal") and not state.get("_announced"):
-                p = state["proposal"]
-                print(f"[fixer] patch proposed on {p['branch']} ({len(p['diff'])} chars of diff)")
-                state["_announced"] = True
-        review = state.get("review")
-        proposal = state.get("proposal")
-        if not proposal:
-            print("[result] Fixer produced no patch (finding may be unsafe to auto-fix). Stopping.")
-            return
-        if not review:
-            print("[result] No review recorded within timeout. Stopping — no PR.")
-            return
-        print(f"[reviewer] verdict={review['verdict'].upper()} — {review['reasoning'][:120]}")
-        if review["verdict"] != "pass":
-            # Make the dead-end visible in the room (and therefore on the Stage),
-            # rather than stopping silently — the human is watching for an outcome.
-            await sm.send_message(
-                chat_id,
-                f"@{owner['name']} the Reviewer requested changes on "
-                f"`{proposal['branch']}` (verdict: {review['verdict']}). No PR was "
-                f"opened. You can propose the fix again to retry.",
-                mentions=[{"id": owner["id"], "name": owner["name"]}],
-            )
-            print("[result] Reviewer requested revision — not advancing to approval.")
-            return
+
+            # revise: loop again with the feedback, unless we're out of rounds
+            feedback = review["reasoning"]
+            if rnd >= args.max_rounds:
+                # Make the dead-end visible in the room (and therefore on the Stage).
+                await sm.send_message(
+                    chat_id,
+                    f"@{owner['name']} after {args.max_rounds} rounds the Reviewer still "
+                    f"requested changes on `{proposal['branch']}`. No PR was opened. You can "
+                    f"send them back in to try again.",
+                    mentions=[{"id": owner["id"], "name": owner["name"]}],
+                )
+                print(f"[result] Reviewer still requesting revision after {args.max_rounds} rounds. Stopping.")
+                return
 
         # -- AUTHORITY GATE: ask the human, wait for approval in the room ------
         # The human must @mention Stage Manager so the orchestrator (which reads via

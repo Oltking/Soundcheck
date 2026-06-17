@@ -8,7 +8,8 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { INSTRUMENTS, Icon, SevGlyph, SevChip, sevKind } from "@/components/glyphs";
+import { INSTRUMENTS, Icon, SevGlyph, sevKind } from "@/components/glyphs";
+import { FixButton } from "@/components/fix-button";
 import type { FindingEntry, LedgerEntry, TimelineItem } from "@/lib/types";
 
 const FILE_RE = /([A-Za-z0-9_./-]+\.[A-Za-z0-9]{1,8})(?::\d+)?/;
@@ -116,10 +117,25 @@ export function Encore({
     const unaddressed = Math.max(0, fixable - patches.length);
     if (unaddressed) open.push({ label: "fixable findings not yet patched", n: unaddressed });
 
+    // continue-the-work target: the most recent sent-back patch, recovered so the
+    // Fixer can be sent back in (review.refs -> patch.id; patch.refs -> finding id).
+    let continueTarget: { file: string; finding: string } | null = null;
+    const revisedReviews = reviews.filter((r) => verdictOf(r) === "revise");
+    if (revisedReviews.length) {
+      const rev = revisedReviews[revisedReviews.length - 1];
+      const p = patches.find((pp) => (rev.refs || []).includes(pp.id)) || patches[patches.length - 1];
+      const file = p ? (p.content || "").match(/Files:\s*([^\n,]+)/)?.[1]?.trim() || "" : "";
+      if (p && file) {
+        const fnd = findings.find((f) => (p.refs || []).includes(f.id));
+        const findingText = fnd ? (fnd.content || "").split("\n")[0] : (p.content || "").split("\n")[0];
+        continueTarget = { file, finding: findingText };
+      }
+    }
+
     return {
       findings: findings.length, sev, controls: controls.length, fixable,
       patches: patches.length, passed, revised, approvals: approvals.length, prs,
-      bows, open,
+      bows, open, continueTarget,
     };
   }, [timeline, findings, ledger]);
 
@@ -192,9 +208,15 @@ export function Encore({
               <li key={o.label}><b className="tnum">{o.n}</b> {o.label}</li>
             ))}
           </ul>
-          <Link href={`/run/${roomId}/stage`} className="btn btn-primary">
-            <Icon name="play" /> Back to the Stage to continue
-          </Link>
+          <div className="encore-open-actions">
+            {d.continueTarget && (
+              <FixButton roomId={roomId} file={d.continueTarget.file} finding={d.continueTarget.finding}
+                label="Send them back in" sentLabel="On it — opening the Stage…" />
+            )}
+            <Link href={`/run/${roomId}/stage`} className="btn">
+              <Icon name="play" /> Back to the Stage
+            </Link>
+          </div>
         </section>
       ) : (
         <section className="encore-clear">
