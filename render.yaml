@@ -1,0 +1,30 @@
+# Render Blueprint — the full live BFF + agents host.
+# Frontend stays on Vercel and points NEXT_PUBLIC_BFF_URL at this service's URL.
+services:
+  - type: web
+    name: soundcheck-bff
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter          # always-on; the free tier sleeps and would kill live runs
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # the Vercel frontend origin(s), comma-separated — for CORS
+      - key: ALLOWED_ORIGINS
+        sync: false
+      # model lanes
+      - key: AIMLAPI_API_KEY
+        sync: false
+      - key: FEATHERLESS_API_KEY
+        sync: false
+      # PRs
+      - key: GITHUB_TOKEN
+        sync: false
+      # Band platform
+      - key: THENVOI_REST_URL
+        sync: false
+      - key: THENVOI_WS_URL
+        sync: false
+      # full contents of agent_config.yaml (the 10 agents' credentials)
+      - key: AGENT_CONFIG_YAML
+        sync: false

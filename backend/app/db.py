@@ -64,9 +64,15 @@ CREATE INDEX IF NOT EXISTS idx_timeline_room ON timeline(room_id);
 
 
 def connect() -> sqlite3.Connection:
-    # seed the writable /tmp cache from the committed snapshot on first use (Vercel)
-    if _ON_VERCEL and not DB_PATH.exists() and _SEED_DB.exists():
-        shutil.copy(_SEED_DB, DB_PATH)
+    # seed the cache from the committed snapshot if it's missing — a fresh hosted
+    # container (Vercel /tmp, a new Render instance). Local dev keeps its own db;
+    # on Render, live runs/refreshes then add to the seeded data.
+    if not DB_PATH.exists() and _SEED_DB.exists():
+        try:
+            DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(_SEED_DB, DB_PATH)
+        except OSError:
+            pass
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
