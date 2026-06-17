@@ -8,8 +8,19 @@ import type {
 
 const BASE = process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:8000";
 
+// Server components fetch at request time; Node's fetch can't take a relative URL
+// like "/_/backend". So on the server we make it absolute (Vercel's deployment
+// origin); in the browser the relative path is fine.
+function resolveBase(): string {
+  if (/^https?:\/\//i.test(BASE)) return BASE;        // already absolute
+  if (typeof window !== "undefined") return BASE;     // browser → relative is fine
+  const host = process.env.VERCEL_URL;                // server on Vercel
+  if (host) return `https://${host}${BASE}`;
+  return `http://localhost:3000${BASE}`;              // server, local fallback
+}
+
 async function get<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { cache: "no-store", ...init });
+  const res = await fetch(`${resolveBase()}${path}`, { cache: "no-store", ...init });
   if (!res.ok) throw new Error(`BFF ${path} -> ${res.status}`);
   return res.json() as Promise<T>;
 }
