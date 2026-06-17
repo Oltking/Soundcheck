@@ -8,6 +8,7 @@ const TABS = [
   { seg: "findings", label: "Findings" },
   { seg: "conductor", label: "The Conductor" },
   { seg: "tape", label: "Master Tape" },
+  { seg: "encore", label: "The Encore" },
 ];
 
 export function RunTabs({ roomId }: { roomId: string }) {

@@ -298,10 +298,10 @@ export function StageView({
         <span className="sr-text"><b>Sending the Fixer…</b> cloning the repo and preparing the patch. The band will perform it on the Stage in a moment.</span>
       </div>
     ) : auditDone ? (
-      <Link href={`/run/${roomId}/findings`} className="stage-done">
+      <Link href={`/run/${roomId}/encore`} className="stage-done">
         <span className="sd-ico"><SevGlyph kind="approved" /></span>
-        <span className="sd-text"><b>Audit complete.</b> {findings.length} findings flagged — propose a fix from the Score, or review them in full.</span>
-        <span className="sd-cta">Review findings <Icon name="chevron" /></span>
+        <span className="sd-text"><b>That&apos;s a wrap.</b> {findings.length} findings flagged — propose a fix from the Score, or see the band take a bow.</span>
+        <span className="sd-cta">The Encore <Icon name="chevron" /></span>
       </Link>
     ) : null}
     <div className="stage-region">
