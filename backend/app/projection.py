@@ -55,8 +55,10 @@ def _ledger_from_event(m: dict) -> dict | None:
     }
 
 
-async def project_room(room_id: str) -> dict[str, Any]:
-    """Read the room from Band, write the projection, return the structured view."""
+async def project_room(room_id: str, room_meta: dict | None = None) -> dict[str, Any]:
+    """Read the room from Band, write the projection, return the structured view.
+    `room_meta` (when known, e.g. from the room listing) supplies the room's own
+    creation time as a fallback date for rooms whose timeline is still empty."""
     db.init_db()
     timeline = await read_room_timeline(room_id)
     participants = await read_room_participants(room_id)
@@ -104,8 +106,11 @@ async def project_room(room_id: str) -> dict[str, Any]:
                 "tags": json.dumps(led["tags"]), "refs": json.dumps(led["refs"]),
             })
 
-    created = timeline[0]["inserted_at"] if timeline else None
-    updated = timeline[-1]["inserted_at"] if timeline else None
+    # Prefer the first/last activity; fall back to the room's own creation time so a
+    # run is never dateless (e.g. a room created but with no captured timeline yet).
+    room_created = (room_meta or {}).get("inserted_at") or (room_meta or {}).get("created_at")
+    created = (timeline[0]["inserted_at"] if timeline else None) or room_created
+    updated = (timeline[-1]["inserted_at"] if timeline else None) or created
     run = {
         "room_id": room_id, "title": "Audit run", "created_at": created,
         "updated_at": updated, "finding_count": counts["Finding"],
@@ -130,7 +135,7 @@ async def project_all_rooms(limit: int = 50) -> list[dict]:
     rooms = await list_known_rooms(limit=limit)
     out = []
     for r in rooms:
-        res = await project_room(r["id"])
+        res = await project_room(r["id"], room_meta=r)
         out.append(res["run"])
     return out
 

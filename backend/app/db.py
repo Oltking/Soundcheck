@@ -96,12 +96,29 @@ def _ensure_columns(conn: sqlite3.Connection, table: str, cols: dict[str, str]) 
             conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {decl}")
 
 
+def _backfill_run_dates(conn: sqlite3.Connection) -> None:
+    """Self-heal dateless runs: any run with no created_at gets it from the
+    earliest/latest event already cached for that room. Covers orphaned rooms
+    (no longer in Band's listing, so never re-projected) and older seed rows."""
+    conn.execute(
+        """UPDATE runs SET
+              created_at = COALESCE(created_at,
+                (SELECT MIN(created_at) FROM timeline t
+                 WHERE t.room_id = runs.room_id AND t.created_at IS NOT NULL)),
+              updated_at = COALESCE(updated_at,
+                (SELECT MAX(created_at) FROM timeline t
+                 WHERE t.room_id = runs.room_id AND t.created_at IS NOT NULL))
+           WHERE created_at IS NULL OR created_at = ''"""
+    )
+
+
 def init_db() -> None:
     conn = connect()
     try:
         conn.executescript(SCHEMA)
         _ensure_columns(conn, "runs", _RUNS_MIGRATIONS)
         _ensure_columns(conn, "timeline", _TIMELINE_MIGRATIONS)
+        _backfill_run_dates(conn)
         conn.commit()
     finally:
         conn.close()
