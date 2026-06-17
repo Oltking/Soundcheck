@@ -14,7 +14,16 @@ import { api } from "@/lib/api";
 import { INSTRUMENTS, SevChip, SevGlyph, sevKind, Icon } from "@/components/glyphs";
 import { MentionText } from "@/components/mention-text";
 import { StageChat } from "@/components/stage-chat";
-import type { FindingEntry, TimelineItem } from "@/lib/types";
+import { FixButton } from "@/components/fix-button";
+import { ApproveAction } from "@/components/approve-action";
+import type { FindingEntry, LedgerEntry, TimelineItem } from "@/lib/types";
+
+// Best-effort file location from a finding's content (e.g. "app.py:23" → app.py).
+const FILE_RE = /([A-Za-z0-9_./-]+\.[A-Za-z0-9]{1,8})(?::\d+)?/;
+function fileOf(content: string): string {
+  const m = FILE_RE.exec(content || "");
+  return m ? m[1] : "";
+}
 
 const SEAT_W = 152, SEAT_H = 92;   // compact seated card (layout footprint)
 const SPOT_W = 740;                // the spotlight (centre-stage) card — wide & short
@@ -85,22 +94,27 @@ function verbOf(e: TimelineItem): string {
 }
 
 export function StageView({
-  roomId, initialTimeline = [], initialFindings = [], live = false,
+  roomId, initialTimeline = [], initialFindings = [], initialLedger = {}, live = false,
 }: {
   roomId: string;
   initialTimeline?: TimelineItem[];
   initialFindings?: FindingEntry[];
+  initialLedger?: Record<string, LedgerEntry[]>;
   live?: boolean;
 }) {
   const [timeline, setTimeline] = useState<TimelineItem[]>(initialTimeline);
   const [findings, setFindings] = useState<FindingEntry[]>(initialFindings);
+  const [ledger, setLedger] = useState<Record<string, LedgerEntry[]>>(initialLedger);
+  // The Stage is the live operations console: proposing a fix from the Score rail
+  // flips this Stage live so you watch the Fixer → Reviewer perform in place.
+  const [liveOn, setLiveOn] = useState(live);
   const wrapRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.7);
   const [narrow, setNarrow] = useState(false);
 
   useEffect(() => {
-    if (!live) return;
+    if (!liveOn) return;
     let alive = true;
     async function pull() {
       try {
@@ -112,7 +126,20 @@ export function StageView({
     pull();
     const iv = setInterval(pull, 6000);
     return () => { alive = false; clearInterval(iv); };
-  }, [roomId, live]);
+  }, [roomId, liveOn]);
+
+  // Remediation/approval state (the ledger) — fetched once on mount and on every
+  // live tick, so the approval gate can live on the Stage too.
+  useEffect(() => {
+    let alive = true;
+    const load = () => api.runDetail(roomId)
+      .then((d) => { if (alive) setLedger(d.ledger_by_kind); })
+      .catch(() => {});
+    load();
+    if (!liveOn) return () => { alive = false; };
+    const iv = setInterval(load, 6000);
+    return () => { alive = false; clearInterval(iv); };
+  }, [roomId, liveOn]);
 
   const { players, layout, latestIdx, mentionNames } = useMemo(() => {
     const bySender = new Map<string, TimelineItem[]>();
@@ -168,15 +195,15 @@ export function StageView({
   // Auto-rotate ONLY on a finished/replay run (to show each player in turn).
   // On a LIVE stage there is no timer — the spotlight follows real activity below.
   useEffect(() => {
-    if (live || pinned || players.length < 2) return;
+    if (liveOn || pinned || players.length < 2) return;
     const iv = setInterval(() => setSpot((s) => (s + 1) % players.length), 3800);
     return () => clearInterval(iv);
-  }, [live, pinned, players.length]);
+  }, [liveOn, pinned, players.length]);
 
   // Live: the spotlight moves to whoever just performed, as they come in.
   useEffect(() => {
-    if (live && !pinned && latestIdx >= 0) setSpot(latestIdx);
-  }, [live, pinned, latestIdx]);
+    if (liveOn && !pinned && latestIdx >= 0) setSpot(latestIdx);
+  }, [liveOn, pinned, latestIdx]);
 
   function pickSeat(i: number) {
     if (i === spot) { setPinned((p) => !p); return; }
@@ -224,17 +251,44 @@ export function StageView({
   // finished, non-live run) — a clear cue + next step instead of dead air.
   const lastTs = timeline.length ? new Date(timeline[timeline.length - 1].created_at || 0).getTime() : 0;
   const idle = lastTs > 0 && Date.now() - lastTs > 25000;
-  const auditDone = findings.length > 0 && (!live || idle);
+  const auditDone = findings.length > 0 && (!liveOn || idle);
+
+  // remediation gate — the loop is now visible AND actionable on the Stage
+  const patch = ledger.PatchProposal?.[0];
+  const review = ledger.ReviewResult?.[0];
+  const approval = ledger.Approval?.[0];
+  const verdict = (review?.tags.find((t) => t.startsWith("verdict:")) || "verdict:—").split(":")[1];
 
   return (
     <>
-    {auditDone && (
+    {approval ? (
+      <div className="stage-remedy approved">
+        <span className="sr-ico"><SevGlyph kind="approved" /></span>
+        <span className="sr-text"><b>Approved.</b> You authorized the patch — the Stage Manager is opening the pull request.</span>
+        <Link href={`/run/${roomId}/conductor`} className="sr-cta">Audit deliverable <Icon name="chevron" /></Link>
+      </div>
+    ) : review ? (
+      <div className="stage-remedy pending">
+        <div className="sr-line">
+          <span className="sr-ico"><Icon name="check" /></span>
+          <span className="sr-text">
+            <b>A fix is ready for your sign-off.</b> The Reviewer returned <span className={`verdict v-${verdict}`}>{verdict?.toUpperCase()}</span> — nothing ships until you authorize.
+          </span>
+        </div>
+        <ApproveAction roomId={roomId} />
+      </div>
+    ) : patch ? (
+      <div className="stage-remedy working">
+        <span className="sr-ico"><Icon name="clock" /></span>
+        <span className="sr-text"><b>Fix in progress.</b> The Fixer proposed a patch — the Reviewer is checking it now. Watch it unfold below.</span>
+      </div>
+    ) : auditDone ? (
       <Link href={`/run/${roomId}/findings`} className="stage-done">
         <span className="sd-ico"><SevGlyph kind="approved" /></span>
-        <span className="sd-text"><b>Audit complete.</b> {findings.length} findings flagged — review them, then propose a fix.</span>
+        <span className="sd-text"><b>Audit complete.</b> {findings.length} findings flagged — propose a fix from the Score, or review them in full.</span>
         <span className="sd-cta">Review findings <Icon name="chevron" /></span>
       </Link>
-    )}
+    ) : null}
     <div className="stage-region">
       <div className="stage-head">
         <div className="title">The Stage<span>the live workforce · {players.length} players</span></div>
@@ -258,7 +312,7 @@ export function StageView({
             <div className="stage-mobile">
               {current && (
                 <div className="player spotlit m-spot">
-                  <SpotlightInner player={current} pinned={pinned} names={mentionNames} live={live} />
+                  <SpotlightInner player={current} pinned={pinned} names={mentionNames} live={liveOn} />
                 </div>
               )}
               <div className="m-rail">
@@ -287,7 +341,7 @@ export function StageView({
                     receded={players.length > 1 && i !== spot}
                     pinned={pinned && i === spot}
                     names={mentionNames}
-                    live={live}
+                    live={liveOn}
                     onClick={() => pickSeat(i)}
                   />
                 ))}
@@ -300,7 +354,7 @@ export function StageView({
           </div>
         )}
 
-        <ScoreRail findings={findings} />
+        <ScoreRail findings={findings} roomId={roomId} onProposed={() => setLiveOn(true)} />
       </div>
       <StageChat roomId={roomId} initialTimeline={timeline} />
     </div>
@@ -467,7 +521,9 @@ function Podium({ podium }: { podium: { x: number; y: number } }) {
   );
 }
 
-function ScoreRail({ findings }: { findings: FindingEntry[] }) {
+function ScoreRail({ findings, roomId, onProposed }: {
+  findings: FindingEntry[]; roomId: string; onProposed: () => void;
+}) {
   return (
     <aside className="score-rail">
       <div className="score-head">
@@ -475,7 +531,7 @@ function ScoreRail({ findings }: { findings: FindingEntry[] }) {
           <h2>The Score</h2>
           <span className="count">{findings.length} {findings.length === 1 ? "entry" : "entries"}</span>
         </div>
-        <div className="sub">evidence ledger · every finding, written down &amp; auditable</div>
+        <div className="sub">evidence ledger · propose a fix and the band performs it live</div>
       </div>
       {findings.length === 0 ? (
         <div className="score-empty">
@@ -487,6 +543,7 @@ function ScoreRail({ findings }: { findings: FindingEntry[] }) {
           {findings.map((f) => {
             const title = (f.content || "").split("\n")[0];
             const evidence = (f.content || "").split("\n").slice(1).join(" ");
+            const file = fileOf(f.content || "");
             return (
               <div key={f.id} className={`finding ${sevKind(f.severity)}`}>
                 <div className="f-top">
@@ -497,7 +554,10 @@ function ScoreRail({ findings }: { findings: FindingEntry[] }) {
                   {evidence && <span className="mono">{evidence.slice(0, 70)}</span>}
                   {f.controls[0] && <><br /><span className="ctrl">{(f.controls[0].content || "").replace("\n", " ")}</span></>}
                 </div>
-                <div className="f-foot"><span className="f-by mono">@{(f.sender || "agent").toLowerCase().replace(/\s+/g, "-")}</span></div>
+                <div className="f-foot">
+                  <span className="f-by mono">@{(f.sender || "agent").toLowerCase().replace(/\s+/g, "-")}</span>
+                  {file && <FixButton roomId={roomId} file={file} finding={title} compact onProposed={onProposed} />}
+                </div>
               </div>
             );
           })}

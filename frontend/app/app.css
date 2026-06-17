@@ -137,6 +137,8 @@
 .fix-btn:hover:not(:disabled) { background: var(--live); color: var(--on-accent); transform: translateY(-1px); }
 .fix-btn:disabled { opacity: .55; cursor: default; }
 .fix-btn.done { background: var(--approved-tint); border-color: var(--approved-line); color: var(--approved); }
+.fix-btn.compact { padding: 4px 9px; font-size: var(--t-xs); border-radius: var(--r-xs); }
+.fix-btn.compact svg { width: 12px; height: 12px; }
 
 .empty { text-align: center; color: var(--ink-3); padding: var(--s8) var(--s4); }
 .empty svg { width: 36px; height: 36px; opacity: .5; }
@@ -428,6 +430,26 @@
 .stage-done .sd-cta { margin-left: auto; display: inline-flex; align-items: center; gap: 2px;
   font-size: var(--t-sm); font-weight: 600; color: var(--live-deep); white-space: nowrap; }
 .stage-done .sd-cta svg { width: 15px; height: 15px; }
+
+/* remediation gate — the Fixer → Reviewer → your sign-off loop, on the Stage */
+.stage-remedy { margin-bottom: var(--s4); padding: var(--s3) var(--s4); border-radius: var(--r-lg);
+  border: 1px solid var(--line); background: var(--surface-2); }
+.stage-remedy .sr-line { display: flex; align-items: center; gap: var(--s3); }
+.stage-remedy.working { display: flex; align-items: center; gap: var(--s3);
+  background: var(--live-tint); border-color: var(--live-line); }
+.stage-remedy.approved { display: flex; align-items: center; gap: var(--s3);
+  background: var(--approved-tint); border-color: var(--approved-line); }
+.stage-remedy.pending { border-color: var(--live-line); }
+.stage-remedy .sr-ico { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface-2); color: var(--live-deep); flex: none; }
+.stage-remedy.approved .sr-ico { color: var(--approved); }
+.stage-remedy .sr-ico svg { width: 13px; height: 13px; }
+.stage-remedy .sr-text { font-size: var(--t-sm); }
+.stage-remedy .sr-text b { color: var(--ink); }
+.stage-remedy.pending .sr-line { margin-bottom: var(--s3); }
+.stage-remedy .sr-cta { margin-left: auto; display: inline-flex; align-items: center; gap: 2px;
+  font-size: var(--t-sm); font-weight: 600; color: var(--live-deep); white-space: nowrap; text-decoration: none; }
+.stage-remedy .sr-cta svg { width: 15px; height: 15px; }
 
 /* ---- Ask the band (chat with Customer Service) ---- */
 .ask { max-width: 880px; margin: 0 auto; background: var(--surface-2); border: 1px solid var(--line);
