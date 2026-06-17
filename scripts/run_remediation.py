@@ -134,7 +134,16 @@ async def main() -> None:
             return
         print(f"[reviewer] verdict={review['verdict'].upper()} — {review['reasoning'][:120]}")
         if review["verdict"] != "pass":
-            print("[result] Reviewer requested revision — not advancing to approval. (loop would repeat)")
+            # Make the dead-end visible in the room (and therefore on the Stage),
+            # rather than stopping silently — the human is watching for an outcome.
+            await sm.send_message(
+                chat_id,
+                f"@{owner['name']} the Reviewer requested changes on "
+                f"`{proposal['branch']}` (verdict: {review['verdict']}). No PR was "
+                f"opened. You can propose the fix again to retry.",
+                mentions=[{"id": owner["id"], "name": owner["name"]}],
+            )
+            print("[result] Reviewer requested revision — not advancing to approval.")
             return
 
         # -- AUTHORITY GATE: ask the human, wait for approval in the room ------

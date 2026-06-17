@@ -270,15 +270,22 @@ export function StageView({
         <span className="sr-text"><b>Approved.</b> You authorized the patch — the Stage Manager is opening the pull request.</span>
         <Link href={`/run/${roomId}/conductor`} className="sr-cta">Audit deliverable <Icon name="chevron" /></Link>
       </div>
-    ) : review ? (
+    ) : review && verdict === "pass" ? (
       <div className="stage-remedy pending">
         <div className="sr-line">
           <span className="sr-ico"><Icon name="check" /></span>
           <span className="sr-text">
-            <b>A fix is ready for your sign-off.</b> The Reviewer returned <span className={`verdict v-${verdict}`}>{verdict?.toUpperCase()}</span> — nothing ships until you authorize.
+            <b>A fix is ready for your sign-off.</b> The Reviewer returned <span className={`verdict v-${verdict}`}>{verdict.toUpperCase()}</span> — nothing ships until you authorize.
           </span>
         </div>
         <ApproveAction roomId={roomId} />
+      </div>
+    ) : review ? (
+      <div className="stage-remedy working">
+        <span className="sr-ico"><Icon name="handoff" /></span>
+        <span className="sr-text">
+          <b>The Reviewer requested changes</b> <span className={`verdict v-${verdict}`}>{verdict?.toUpperCase()}</span> — the patch did not pass cross-model review, so no sign-off was requested. Propose a fix again to retry.
+        </span>
       </div>
     ) : patch ? (
       <div className="stage-remedy working">
