@@ -7,11 +7,19 @@ machine; same read-cache principle.)
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import sqlite3
 from pathlib import Path
 from typing import Any
 
-DB_PATH = Path(__file__).resolve().parent.parent / "soundcheck.db"
+# On Vercel the deployment filesystem is read-only except /tmp, so the cache lives
+# in /tmp and is seeded once from the committed snapshot (backend/seed.db) — enough
+# for the read-only hosted demo (browse runs/Stage/Findings/Conductor/Tape).
+_ON_VERCEL = bool(os.environ.get("VERCEL"))
+_LOCAL_DB = Path(__file__).resolve().parent.parent / "soundcheck.db"
+_SEED_DB = Path(__file__).resolve().parent.parent / "seed.db"
+DB_PATH = Path("/tmp/soundcheck.db") if _ON_VERCEL else _LOCAL_DB
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS runs (
@@ -56,6 +64,9 @@ CREATE INDEX IF NOT EXISTS idx_timeline_room ON timeline(room_id);
 
 
 def connect() -> sqlite3.Connection:
+    # seed the writable /tmp cache from the committed snapshot on first use (Vercel)
+    if _ON_VERCEL and not DB_PATH.exists() and _SEED_DB.exists():
+        shutil.copy(_SEED_DB, DB_PATH)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
