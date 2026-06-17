@@ -108,6 +108,9 @@ export function StageView({
   // The Stage is the live operations console: proposing a fix from the Score rail
   // flips this Stage live so you watch the Fixer → Reviewer perform in place.
   const [liveOn, setLiveOn] = useState(live);
+  // immediate feedback the moment a fix is requested — the Fixer takes ~30-60s to
+  // clone + patch, so without this the Stage looks inert ("nothing happened").
+  const [justProposed, setJustProposed] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.7);
@@ -282,6 +285,11 @@ export function StageView({
         <span className="sr-ico"><Icon name="clock" /></span>
         <span className="sr-text"><b>Fix in progress.</b> The Fixer proposed a patch — the Reviewer is checking it now. Watch it unfold below.</span>
       </div>
+    ) : justProposed ? (
+      <div className="stage-remedy working">
+        <span className="sr-ico"><span className="cl-orb"><i /><i /><i /></span></span>
+        <span className="sr-text"><b>Sending the Fixer…</b> cloning the repo and preparing the patch. The band will perform it on the Stage in a moment.</span>
+      </div>
     ) : auditDone ? (
       <Link href={`/run/${roomId}/findings`} className="stage-done">
         <span className="sd-ico"><SevGlyph kind="approved" /></span>
@@ -354,7 +362,8 @@ export function StageView({
           </div>
         )}
 
-        <ScoreRail findings={findings} roomId={roomId} onProposed={() => setLiveOn(true)} />
+        <ScoreRail findings={findings} roomId={roomId}
+          onProposed={() => { setLiveOn(true); setJustProposed(true); }} />
       </div>
       <StageChat roomId={roomId} initialTimeline={timeline} />
     </div>
