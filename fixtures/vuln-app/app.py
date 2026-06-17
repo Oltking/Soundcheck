@@ -78,3 +78,5 @@ def fetch():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)  # fixture: debug + all interfaces
+
+# soundcheck push-test 20260617-181953
