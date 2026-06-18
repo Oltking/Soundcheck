@@ -8,7 +8,7 @@
 // On narrow screens it switches to a mobile layout: a full-width performer card
 // above a tappable rail of the seated band.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { INSTRUMENTS, SevChip, SevGlyph, sevKind, Icon } from "@/components/glyphs";
@@ -368,7 +368,7 @@ export function StageView({
       <div className="stage-body" ref={bodyRef}>
         {narrow ? (
           players.length === 0 ? (
-            <div className="stage-empty-note rel">No activity yet for this run.</div>
+            <StageEmpty />
           ) : (
             <div className="stage-mobile">
               {current && (
@@ -387,6 +387,8 @@ export function StageView({
               <div className="m-podium mono"><b>You</b> · the conductor — nothing ships without sign-off</div>
             </div>
           )
+        ) : players.length === 0 ? (
+          <div className="stage-wrap"><StageEmpty /></div>
         ) : (
           <div className="stage-wrap" ref={wrapRef}>
             <div className="stage-scale" style={{ transform: `scale(${scale})` }}>
@@ -409,9 +411,6 @@ export function StageView({
                 <Podium podium={layout.podium} />
               </div>
             </div>
-            {players.length === 0 && (
-              <div className="stage-empty-note">No activity yet for this run.</div>
-            )}
           </div>
         )}
 
@@ -570,6 +569,32 @@ function FloorBg({ W, H, podium, spot }: {
       <ellipse cx={W / 2} cy={podium.y + 26} rx={W * 0.30} ry="50" fill="none" stroke="var(--line)" strokeWidth="1" opacity="0.65" />
       <ellipse cx={W / 2} cy={podium.y + 22} rx={W * 0.17} ry="32" fill="none" stroke="var(--line-strong)" strokeWidth="1" opacity="0.7" />
     </svg>
+  );
+}
+
+// First-run / no-activity state — fills the stage with what's about to happen,
+// the flow, and a way back, instead of a bare "nothing here" note.
+function StageEmpty() {
+  const FLOW = ["Audit", "Map", "Fix", "Review", "Approve"];
+  return (
+    <div className="stage-empty">
+      <div className="se-mark"><Icon name="play" /></div>
+      <h3>The stage is set.</h3>
+      <p>
+        No one&apos;s performed yet. When the audit runs, the band takes their places here —
+        Scout reads the repo, the scanners flag findings, the Mapper ties them to controls —
+        and you watch every handoff live.
+      </p>
+      <div className="se-flow">
+        {FLOW.map((s, i) => (
+          <Fragment key={s}>
+            {i > 0 && <i className="se-arrow"><Icon name="chevron" /></i>}
+            <span className="se-step">{s}</span>
+          </Fragment>
+        ))}
+      </div>
+      <Link href="/app" className="btn"><Icon name="chevron" /> Back to Runs</Link>
+    </div>
   );
 }
 

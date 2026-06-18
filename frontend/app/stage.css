@@ -181,14 +181,52 @@
 .stage-empty-note.rel { position: static; padding: var(--s8) var(--s4); }
 
 /* ---------- Ask-the-band dock (corner of the stage) ---------- */
-.sc-fab { position: absolute; left: var(--s4); bottom: var(--s4); z-index: 30;
-  display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px 9px 9px; border-radius: var(--r-pill);
+.sc-dock { position: absolute; left: var(--s4); bottom: var(--s4); z-index: 30;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+  max-width: calc(100% - 2 * var(--s4)); }
+.sc-fab { position: relative; display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 15px 9px 9px; border-radius: var(--r-pill);
   background: var(--live); color: var(--on-accent); border: 1px solid var(--live-deep); cursor: pointer;
   font: inherit; font-size: var(--t-sm); font-weight: 600; box-shadow: var(--shadow), var(--glow-live); }
 .sc-fab:hover { background: var(--live-deep); transform: translateY(-1px); }
 .sc-fab-ico { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
   background: rgba(255,255,255,0.18); }
 .sc-fab-ico svg { width: 15px; height: 15px; }
+/* a quiet attention ping so the dock reads as interactive */
+.sc-fab-ping { position: absolute; left: 9px; top: 50%; width: 24px; height: 24px;
+  transform: translateY(-50%); border-radius: 50%; pointer-events: none;
+  box-shadow: 0 0 0 0 var(--live); animation: scPing 2.6s ease-out infinite; }
+@keyframes scPing { 0% { box-shadow: 0 0 0 0 rgba(37,99,235,.5); }
+  70%, 100% { box-shadow: 0 0 0 12px rgba(37,99,235,0); } }
+/* the one-time hint bubble above the dock */
+.sc-hint { position: relative; max-width: 280px; padding: 10px 30px 10px 13px;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r);
+  box-shadow: var(--shadow-lg); animation: snIn .45s var(--ease) both; }
+.sc-hint::after { content: ""; position: absolute; left: 22px; bottom: -7px; width: 12px; height: 12px;
+  background: var(--surface); border-right: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong);
+  transform: rotate(45deg); }
+.sc-hint-t { display: block; font-size: var(--t-sm); color: var(--ink); line-height: 1.35; }
+.sc-hint-eg { display: block; font-size: 10px; color: var(--ink-3); margin-top: 3px; }
+.sc-hint-x { position: absolute; top: 6px; right: 6px; background: none; border: none; cursor: pointer;
+  color: var(--ink-3); padding: 3px; display: grid; place-items: center; border-radius: 5px; }
+.sc-hint-x:hover { background: var(--surface-3); color: var(--ink); }
+.sc-hint-x svg { width: 13px; height: 13px; transform: rotate(90deg); }
+
+/* ---------- First-run / empty stage ---------- */
+.stage-empty { margin: auto; max-width: 460px; padding: var(--s6) var(--s5); text-align: center; }
+.stage-empty .se-mark { width: 52px; height: 52px; margin: 0 auto var(--s3); border-radius: 50%;
+  display: grid; place-items: center; background: var(--live-tint); border: 1px solid var(--live-line);
+  color: var(--live-deep); }
+.stage-empty .se-mark svg { width: 22px; height: 22px; margin-left: 2px; }
+.stage-empty h3 { font-size: var(--t-h3); font-weight: 600; margin: 0 0 var(--s2); letter-spacing: -0.01em; }
+.stage-empty p { color: var(--ink-2); font-size: var(--t-sm); line-height: 1.55; margin: 0 auto var(--s4); }
+.se-flow { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px;
+  margin-bottom: var(--s4); }
+.se-step { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 11px;
+  color: var(--ink-2); padding: 4px 9px; background: var(--surface-2); border: 1px solid var(--line-soft);
+  border-radius: var(--r-pill); }
+.se-arrow { display: grid; place-items: center; color: var(--ink-4); margin-left: -2px; }
+.se-arrow svg { width: 11px; height: 11px; }
 
 .stage-chat.open { position: absolute; left: var(--s4); bottom: var(--s4); z-index: 30;
   width: 340px; max-width: calc(100% - 2 * var(--s4)); max-height: min(74%, 460px);

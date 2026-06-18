@@ -30,6 +30,7 @@ function historyFrom(timeline: TimelineItem[]): Msg[] {
 
 export function StageChat({ roomId, initialTimeline }: { roomId: string; initialTimeline: TimelineItem[] }) {
   const [open, setOpen] = useState(false);
+  const [showHint, setShowHint] = useState(true);
   const [msgs, setMsgs] = useState<Msg[]>(() => historyFrom(initialTimeline));
   const [input, setInput] = useState("");
   const [waiting, setWaiting] = useState(false);
@@ -84,10 +85,22 @@ export function StageChat({ roomId, initialTimeline }: { roomId: string; initial
 
   if (!open) {
     return (
-      <button className="sc-fab" onClick={() => setOpen(true)} aria-label="Ask the band">
-        <span className="sc-fab-ico">{INSTRUMENTS.reviewer()}</span>
-        Ask the band
-      </button>
+      <div className="sc-dock">
+        {showHint && (
+          <div className="sc-hint" role="note">
+            <span className="sc-hint-t">Curious about this run? <b>Ask the band.</b></span>
+            <span className="sc-hint-eg mono">“most serious finding?” · “which controls are hit?”</span>
+            <button className="sc-hint-x" onClick={() => setShowHint(false)} aria-label="Dismiss">
+              <Icon name="chevron" />
+            </button>
+          </div>
+        )}
+        <button className="sc-fab" onClick={() => { setOpen(true); setShowHint(false); }} aria-label="Ask the band">
+          <span className="sc-fab-ico">{INSTRUMENTS.reviewer()}</span>
+          Ask the band
+          <span className="sc-fab-ping" aria-hidden />
+        </button>
+      </div>
     );
   }
 
