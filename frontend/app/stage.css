@@ -363,23 +363,6 @@
 .encore-polish.ask { background: var(--paper-well); border: 1px solid var(--line);
   border-radius: var(--r-lg); padding: var(--s5); }
 
-/* The Emcee's curtain call — the agent-voiced narration under the header. */
-.encore-voice { position: relative; z-index: 1; max-width: 680px;
-  margin: var(--s2) auto var(--s4); padding: var(--s4) var(--s5);
-  text-align: center; background: var(--live-tint);
-  border: 1px solid var(--live-line); border-radius: var(--r-lg);
-  animation: encoreBow 520ms cubic-bezier(.2,.7,.2,1) both; }
-.encore-voice .ev-mark { display: inline-grid; place-items: center; width: 26px; height: 26px;
-  border-radius: 50%; background: var(--paper); color: var(--live-deep); margin-bottom: var(--s2); }
-.encore-voice .ev-mark svg { width: 14px; height: 14px; }
-.encore-voice .ev-line { margin: 0; border: 0; padding: 0;
-  font-family: var(--display); font-weight: 500; font-size: clamp(17px, 2.4vw, 22px);
-  line-height: 1.45; color: var(--ink); font-style: italic; }
-.encore-voice .ev-by { display: block; margin-top: var(--s2);
-  color: var(--ink-3); font-size: var(--t-xs); letter-spacing: .04em; }
-.encore-voice-cta { position: relative; z-index: 1; text-align: center; margin: 0 auto var(--s4); }
-.encore-voice-cta .btn svg { color: var(--live-deep); }
-
 /* The Mic — the voiced run-walkthrough control + the speaking caption. */
 .stage-mic { display: flex; flex-direction: column; gap: var(--s2); padding: var(--s2) var(--s5) 0; }
 .mic-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
