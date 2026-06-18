@@ -20,6 +20,26 @@
 .stage-head .tallies span { display: inline-flex; align-items: center; gap: 5px; }
 .stage-head .tallies svg { width: 10px; height: 10px; }
 
+/* "now in the spotlight" — fills the head's centre and shows who's performing */
+.stage-now { display: inline-flex; align-items: center; gap: 9px; min-width: 0;
+  padding: 5px 13px 5px 9px; border-radius: var(--r-pill);
+  background: var(--surface); border: 1px solid var(--line-soft);
+  animation: snIn .4s var(--ease); }
+@keyframes snIn { from { opacity: 0; transform: translateY(-3px); } }
+.stage-now .sn-k { font-size: 8.5px; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--ink-3); flex: none; }
+.stage-now .sn-inst { width: 24px; height: 24px; display: grid; place-items: center; flex: none;
+  border-radius: 7px; background: var(--live-tint); border: 1px solid var(--live-line); color: var(--live-deep); }
+.stage-now .sn-inst svg { width: 15px; height: 15px; }
+.stage-now .sn-id { display: inline-flex; align-items: baseline; gap: 7px; min-width: 0; }
+.stage-now .sn-name { font-size: var(--t-sm); font-weight: 650; letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stage-now .sn-role { font-size: 9.5px; color: var(--ink-3); white-space: nowrap; }
+.stage-now .sn-stat { flex: none; display: grid; place-items: center; }
+.stage-now .sn-stat.thinking { color: var(--live-deep); }
+.stage-now .sn-stat.done { color: var(--approved); }
+.stage-now .sn-stat svg { width: 13px; height: 13px; }
+
 .stage-legend { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); padding: 9px var(--s5);
   border-bottom: 1px solid var(--line-soft); background: var(--surface); }
 .stage-legend span { display: inline-flex; align-items: center; gap: 7px; font-size: var(--t-xs); color: var(--ink-3); }
@@ -273,6 +293,7 @@
   .score-rail { width: auto; border-left: none; border-top: 1px solid var(--line); }
   .score-list { max-height: 56vh; }
   .stage-legend { gap: 6px var(--s4); }
+  .stage-now { display: none; }
 }
 
 /* ============ The Encore — post-session curtain call ============ */

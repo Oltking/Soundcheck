@@ -331,7 +331,24 @@ export function StageView({
     ) : null}
     <div className="stage-region">
       <div className="stage-head">
-        <div className="title">The Stage<span>the live workforce · {players.length} players</span></div>
+        <div className="title">The Stage
+          <span>{players.length} player{players.length === 1 ? "" : "s"} · {liveOn ? "live" : "replay"}</span>
+        </div>
+        {current && (
+          <div className="stage-now" key={current.name}>
+            <span className="sn-k mono">{liveOn ? "on the mic" : "in the spotlight"}</span>
+            <span className="sn-inst">{INSTRUMENTS[current.inst]()}</span>
+            <span className="sn-id">
+              <span className="sn-name">{current.name}</span>
+              <span className="sn-role mono">{current.role}</span>
+            </span>
+            <span className={`sn-stat ${current.status}`}>
+              {current.status === "thinking"
+                ? <span className="eq"><i /><i /><i /><i /></span>
+                : <SevGlyph kind="approved" />}
+            </span>
+          </div>
+        )}
         <span className="tallies">
           <span style={{ color: "var(--severe)" }}><SevGlyph kind="critical" /> {tallies.critical}</span>
           <span style={{ color: "var(--attention)" }}><SevGlyph kind="attention" /> {tallies.attention}</span>
