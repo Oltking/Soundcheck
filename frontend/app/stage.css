@@ -180,9 +180,9 @@
 .m-podium b { color: var(--ink); }
 .stage-empty-note.rel { position: static; padding: var(--s8) var(--s4); }
 
-/* ---------- Ask-the-band dock (top-left of the stage) ---------- */
-.sc-dock { position: absolute; left: var(--s4); top: var(--s4); z-index: 30;
-  display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
+/* ---------- Ask-the-band dock (top-right of the floor, clear of the Score) ---------- */
+.sc-dock { position: absolute; right: calc(300px + var(--s4)); top: var(--s4); z-index: 30;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
   max-width: calc(100% - 2 * var(--s4)); }
 .sc-fab { position: relative; display: inline-flex; align-items: center; gap: 8px;
   padding: 9px 15px 9px 9px; border-radius: var(--r-pill);
@@ -202,7 +202,7 @@
 .sc-hint { position: relative; max-width: 280px; padding: 10px 30px 10px 13px;
   background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r);
   box-shadow: var(--shadow-lg); animation: snIn .45s var(--ease) both; }
-.sc-hint::after { content: ""; position: absolute; left: 22px; top: -7px; width: 12px; height: 12px;
+.sc-hint::after { content: ""; position: absolute; right: 22px; top: -7px; width: 12px; height: 12px;
   background: var(--surface); border-left: 1px solid var(--line-strong); border-top: 1px solid var(--line-strong);
   transform: rotate(45deg); }
 .sc-hint-t { display: block; font-size: var(--t-sm); color: var(--ink); line-height: 1.35; }
@@ -228,7 +228,7 @@
 .se-arrow { display: grid; place-items: center; color: var(--ink-4); margin-left: -2px; }
 .se-arrow svg { width: 11px; height: 11px; }
 
-.stage-chat.open { position: absolute; left: var(--s4); top: var(--s4); z-index: 30;
+.stage-chat.open { position: absolute; right: calc(300px + var(--s4)); top: var(--s4); z-index: 30;
   width: 340px; max-width: calc(100% - 2 * var(--s4)); max-height: min(74%, 460px);
   display: flex; flex-direction: column; overflow: hidden;
   background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: var(--r-lg);
@@ -332,6 +332,7 @@
   .score-list { max-height: 56vh; }
   .stage-legend { gap: 6px var(--s4); }
   .stage-now { display: none; }
+  .sc-dock, .stage-chat.open { right: var(--s4); }
 }
 
 /* ============ The Encore — post-session curtain call ============ */
