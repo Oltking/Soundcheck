@@ -221,23 +221,41 @@ export function buildWalkthrough(
   const perf = groups.slice(0, cut);
   const cutTime = cut < groups.length ? norm(groups[cut].items[0].created_at) || "9999" : "9999";
 
-  // each turn's closing time, and the turn indices per agent (in order)
-  const turnTime = perf.map((g) => norm(g.items[g.items.length - 1].created_at));
-  const turnsOf = new Map<string, number[]>();
-  perf.forEach((g, i) => { const a = turnsOf.get(g.name) || []; a.push(i); turnsOf.set(g.name, a); });
+  // every player's THOUGHT and TASK events, before the cut — used both to enrich
+  // the spoken turns AND to surface agents that worked but never sent a chat.
+  const acts = timeline.filter((m) =>
+    m.sender_type !== "User" && (m.mtype === "task" || m.mtype === "thought") &&
+    norm(m.sender) && index.has(norm(m.sender)) &&
+    !isCS(norm(m.sender)) && norm(m.created_at) <= cutTime);
 
-  // bucket each agent's THOUGHT and TASK events into the turn they belong to —
-  // its next text report (work happens, then the agent reports), so each turn
-  // can also speak what it did and was reasoning about, not just the handoff.
+  // turn specs: the speaking turns (with handoffs), PLUS a turn for every player
+  // who worked but never spoke — so no one on stage is left silent. Ordered by
+  // when each turn began (first text, or first activity for the silent ones).
+  interface Spec { name: string; items: TimelineItem[]; sort: string; close: string }
+  const specs: Spec[] = perf.map((g) => ({
+    name: g.name, items: g.items,
+    sort: norm(g.items[0].created_at),
+    close: norm(g.items[g.items.length - 1].created_at),
+  }));
+  const speaking = new Set(perf.map((g) => g.name));
+  for (const name of uniq(acts.map((a) => norm(a.sender))).filter((n) => !speaking.has(n))) {
+    const ts = acts.filter((a) => eqName(a.sender, name)).map((a) => norm(a.created_at)).sort();
+    specs.push({ name, items: [], sort: ts[0], close: ts[ts.length - 1] || "9999" });
+  }
+  specs.sort((a, b) => (a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0));
+
+  // closing time per turn + the turn indices per agent (ascending)
+  const turnTime = specs.map((s) => s.close);
+  const turnsOf = new Map<string, number[]>();
+  specs.forEach((s, i) => { const a = turnsOf.get(s.name) || []; a.push(i); turnsOf.set(s.name, a); });
+
+  // bucket each event into the agent's turn whose work it belongs to (its next
+  // report — work happens, then the agent reports), so a turn can also speak
+  // what it did and was reasoning about, not just the handoff.
   const buckets = new Map<number, { task: string[]; thought: string[] }>();
-  for (const m of timeline) {
-    if (m.sender_type === "User") continue;
-    if (m.mtype !== "task" && m.mtype !== "thought") continue;
-    const name = norm(m.sender);
-    const idxs = turnsOf.get(name);
-    if (!idxs) continue;
+  for (const m of acts) {
+    const idxs = turnsOf.get(norm(m.sender))!;
     const t = norm(m.created_at);
-    if (t > cutTime) continue; // skip post-audit (Q&A) activity
     let target = idxs[idxs.length - 1];
     for (const ti of idxs) { if (t <= turnTime[ti]) { target = ti; break; } }
     const b = buckets.get(target) || { task: [], thought: [] };
@@ -246,34 +264,34 @@ export function buildWalkthrough(
   }
 
   const lastPos = new Map<string, number>();
-  perf.forEach((g, i) => lastPos.set(g.name, i));
+  specs.forEach((s, i) => lastPos.set(s.name, i));
 
   const occ = new Map<string, number>();
   const artsDone = new Set<string>();
-  return perf.map((g, gi) => {
-    const p = byPlayer.get(g.name)!;
-    const part = partOf(g.name);
-    const n = occ.get(g.name) || 0;
-    occ.set(g.name, n + 1);
+  return specs.map((s, gi) => {
+    const p = byPlayer.get(s.name)!;
+    const part = partOf(s.name);
+    const n = occ.get(s.name) || 0;
+    occ.set(s.name, n + 1);
 
     // who this turn hands to — mentions across the turn, minus self and the human
     const ment = new Set<string>();
-    for (const it of g.items) for (const mn of it.mentions || []) {
+    for (const it of s.items) for (const mn of it.mentions || []) {
       const nm = norm(mn);
-      if (nm && !eqName(nm, g.name) && nm.toUpperCase() !== "YOU") ment.add(nm);
+      if (nm && !eqName(nm, s.name) && nm.toUpperCase() !== "YOU") ment.add(nm);
     }
     const handoff = nameList([...ment].slice(0, 3));
 
-    const base = artsFor(g.name);
-    const arts: Arts = artsDone.has(g.name)
+    const base = artsFor(s.name);
+    const arts: Arts = artsDone.has(s.name)
       ? { findings: 0, controls: 0, file: "", verdict: base.verdict }
       : base;
-    artsDone.add(g.name);
+    artsDone.add(s.name);
 
-    const summary = compose(part, g.name, p.role, n, handoff, arts, lastPos.get(g.name) === gi, hasApproval);
+    const summary = compose(part, s.name, p.role, n, handoff, arts, lastPos.get(s.name) === gi, hasApproval);
     const b = buckets.get(gi) || { task: [], thought: [] };
     const line = [summary, enrich(part, b.task, b.thought)].filter(Boolean).join(" ");
-    return { name: g.name, inst: p.inst, part, role: p.role, line, playerIndex: index.get(g.name)! };
+    return { name: s.name, inst: p.inst, part, role: p.role, line, playerIndex: index.get(s.name)! };
   });
 }
 
