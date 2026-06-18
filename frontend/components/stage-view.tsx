@@ -416,8 +416,8 @@ export function StageView({
 
         <ScoreRail findings={findings} roomId={roomId}
           onProposed={() => { setLiveOn(true); setJustProposed(true); }} />
+        <StageChat roomId={roomId} initialTimeline={timeline} />
       </div>
-      <StageChat roomId={roomId} initialTimeline={timeline} />
     </div>
     </>
   );

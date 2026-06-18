@@ -86,6 +86,11 @@ export function StageChat({ roomId, initialTimeline }: { roomId: string; initial
   if (!open) {
     return (
       <div className="sc-dock">
+        <button className="sc-fab" onClick={() => { setOpen(true); setShowHint(false); }} aria-label="Ask the band">
+          <span className="sc-fab-ico">{INSTRUMENTS.reviewer()}</span>
+          Ask the band
+          <span className="sc-fab-ping" aria-hidden />
+        </button>
         {showHint && (
           <div className="sc-hint" role="note">
             <span className="sc-hint-t">Curious about this run? <b>Ask the band.</b></span>
@@ -95,11 +100,6 @@ export function StageChat({ roomId, initialTimeline }: { roomId: string; initial
             </button>
           </div>
         )}
-        <button className="sc-fab" onClick={() => { setOpen(true); setShowHint(false); }} aria-label="Ask the band">
-          <span className="sc-fab-ico">{INSTRUMENTS.reviewer()}</span>
-          Ask the band
-          <span className="sc-fab-ping" aria-hidden />
-        </button>
       </div>
     );
   }

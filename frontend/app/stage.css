@@ -49,8 +49,8 @@
   box-shadow: 0 0 4px var(--live-bright); }
 .stage-legend .lg-podium { background: var(--ink); border-radius: var(--r-pill); width: 10px; height: 10px; }
 
-/* stage + score side by side */
-.stage-body { display: flex; min-height: 500px; }
+/* stage + score side by side (relative: anchors the Ask-the-band dock) */
+.stage-body { position: relative; display: flex; min-height: 500px; }
 .stage-wrap { flex: 1; position: relative; overflow: hidden; display: flex;
   align-items: center; justify-content: center; min-height: 500px; }
 .stage-scale { position: relative; transform-origin: center center; }
@@ -180,8 +180,8 @@
 .m-podium b { color: var(--ink); }
 .stage-empty-note.rel { position: static; padding: var(--s8) var(--s4); }
 
-/* ---------- Ask-the-band dock (corner of the stage) ---------- */
-.sc-dock { position: absolute; left: var(--s4); bottom: var(--s4); z-index: 30;
+/* ---------- Ask-the-band dock (top-left of the stage) ---------- */
+.sc-dock { position: absolute; left: var(--s4); top: var(--s4); z-index: 30;
   display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
   max-width: calc(100% - 2 * var(--s4)); }
 .sc-fab { position: relative; display: inline-flex; align-items: center; gap: 8px;
@@ -202,8 +202,8 @@
 .sc-hint { position: relative; max-width: 280px; padding: 10px 30px 10px 13px;
   background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r);
   box-shadow: var(--shadow-lg); animation: snIn .45s var(--ease) both; }
-.sc-hint::after { content: ""; position: absolute; left: 22px; bottom: -7px; width: 12px; height: 12px;
-  background: var(--surface); border-right: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong);
+.sc-hint::after { content: ""; position: absolute; left: 22px; top: -7px; width: 12px; height: 12px;
+  background: var(--surface); border-left: 1px solid var(--line-strong); border-top: 1px solid var(--line-strong);
   transform: rotate(45deg); }
 .sc-hint-t { display: block; font-size: var(--t-sm); color: var(--ink); line-height: 1.35; }
 .sc-hint-eg { display: block; font-size: 10px; color: var(--ink-3); margin-top: 3px; }
@@ -228,7 +228,7 @@
 .se-arrow { display: grid; place-items: center; color: var(--ink-4); margin-left: -2px; }
 .se-arrow svg { width: 11px; height: 11px; }
 
-.stage-chat.open { position: absolute; left: var(--s4); bottom: var(--s4); z-index: 30;
+.stage-chat.open { position: absolute; left: var(--s4); top: var(--s4); z-index: 30;
   width: 340px; max-width: calc(100% - 2 * var(--s4)); max-height: min(74%, 460px);
   display: flex; flex-direction: column; overflow: hidden;
   background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: var(--r-lg);
