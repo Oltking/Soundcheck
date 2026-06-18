@@ -127,6 +127,53 @@ async def polish(room_id: str) -> dict:
             "note": "the Producer is drafting notes — refresh the Encore shortly"}
 
 
+def _run_brief(room_id: str) -> str:
+    """A compact, factual brief for the Emcee to narrate — counts, the players,
+    and the headline finding. Facts only; the Emcee adds the voice, not the data."""
+    led = _rows("SELECT kind, content, tags, sender FROM ledger WHERE room_id=?", room_id)
+    findings = [r for r in led if r["kind"] == "Finding"]
+    patches = [r for r in led if r["kind"] == "PatchProposal"]
+    reviews = [r for r in led if r["kind"] == "ReviewResult"]
+    approvals = [r for r in led if r["kind"] == "Approval"]
+
+    def verdict(r: dict) -> str:
+        for t in json.loads(r.get("tags") or "[]"):
+            if t.startswith("verdict:"):
+                return t.split(":", 1)[1]
+        return ""
+    passed = sum(1 for r in reviews if verdict(r) == "pass")
+    revised = sum(1 for r in reviews if verdict(r) == "revise")
+    players = sorted({(r.get("sender") or "").strip() for r in led if (r.get("sender") or "").strip()})
+
+    bits = [f"{len(findings)} finding(s) found"]
+    if patches:
+        bits.append(f"{len(patches)} fix(es) proposed ({passed} passed review, {revised} sent back)")
+    if approvals:
+        bits.append(f"{len(approvals)} approved by the human")
+    if players:
+        bits.append("players: " + ", ".join(players[:6]))
+    if findings:
+        bits.append("headline finding: " + (findings[0]["content"] or "").split("\n")[0][:100])
+    return ". ".join(bits) + "."
+
+
+@app.post("/runs/{room_id}/narrate")
+async def narrate(room_id: str) -> dict:
+    """The Emcee's curtain call — generate an agent-voiced narration of the Encore.
+    Detached subprocess (run_narration.py) on the OSS lane; it writes a CurtainCall
+    memory to Band, which then projects to the Encore. Needs at least one finding."""
+    if not _rows("SELECT 1 FROM ledger WHERE room_id=? AND "
+                 "kind IN ('Finding','PatchProposal') LIMIT 1", room_id):
+        raise HTTPException(status_code=400, detail="Nothing to narrate on this run yet.")
+    brief = _run_brief(room_id)
+    cmd = [sys.executable, str(REPO_ROOT / "scripts" / "run_narration.py"),
+           "--room-id", room_id, "--brief", brief[:700]]
+    subprocess.Popen(cmd, cwd=str(REPO_ROOT),
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return {"status": "narration_started",
+            "note": "the Emcee is stepping up to the mic — refresh the Encore shortly"}
+
+
 def _run_context(room_id: str) -> str:
     """A compact, factual summary of the run for Customer Service to answer from."""
     rows = _rows("SELECT content FROM ledger WHERE room_id=? AND kind='Finding'", room_id)

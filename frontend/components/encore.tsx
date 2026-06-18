@@ -16,6 +16,10 @@ import type { FindingEntry, LedgerEntry, TimelineItem } from "@/lib/types";
 const FILE_RE = /([A-Za-z0-9_./-]+\.[A-Za-z0-9]{1,8})(?::\d+)?/;
 const PR_RE = /https?:\/\/github\.com\/[^\s)]+\/pull\/\d+/i;
 
+// The newest entry of a (chronologically-ordered) ledger group, if any.
+const last = (xs?: LedgerEntry[]): LedgerEntry | undefined =>
+  xs && xs.length ? xs[xs.length - 1] : undefined;
+
 function roleOf(name: string): { inst: keyof typeof INSTRUMENTS; role: string } {
   const n = name.toLowerCase();
   if (n.includes("bandleader")) return { inst: "bandleader", role: "orchestrator" };
@@ -158,6 +162,12 @@ export function Encore({
         <p>{summary}</p>
       </header>
 
+      <CurtainVoice
+        roomId={roomId}
+        initial={last(ledger.CurtainCall)}
+        hasSet={d.findings > 0 || d.patches > 0 || d.bows.length > 0}
+      />
+
       <div className="encore-score">
         {([
           ["findings", d.findings],
@@ -242,6 +252,53 @@ export function Encore({
         <Link href={`/run/${roomId}/conductor`} className="btn"><Icon name="check" /> Audit deliverable</Link>
         <Link href={`/run/${roomId}/tape`} className="btn"><Icon name="tape" /> Master Tape</Link>
       </footer>
+    </div>
+  );
+}
+
+// The Emcee's curtain call — an agent-voiced narration of the set. Shows the
+// existing CurtainCall if one was written, or offers to summon the Emcee
+// (OSS lane, written to Band), then polls for it to land. Flavor on top of the
+// deterministic recap — never blocks the page.
+function CurtainVoice({ roomId, initial, hasSet }: {
+  roomId: string; initial?: LedgerEntry; hasSet: boolean;
+}) {
+  const [note, setNote] = useState<LedgerEntry | undefined>(initial);
+  const [state, setState] = useState<"idle" | "working">("idle");
+
+  async function summon() {
+    setState("working");
+    try {
+      await api.narrate(roomId);
+      for (let i = 0; i < 18; i++) {
+        await new Promise((r) => setTimeout(r, 5000));
+        try {
+          const d = await api.runDetail(roomId);
+          const cc = last(d.ledger_by_kind.CurtainCall);
+          if (cc) { setNote(cc); setState("idle"); return; }
+        } catch { /* keep polling */ }
+      }
+    } catch { /* fall through to idle */ }
+    setState("idle");
+  }
+
+  if (note) {
+    return (
+      <section className="encore-voice">
+        <span className="ev-mark"><Icon name="sparkle" /></span>
+        <blockquote className="ev-line">{note.content}</blockquote>
+        <span className="ev-by mono">— the Emcee</span>
+      </section>
+    );
+  }
+
+  if (!hasSet) return null;
+  return (
+    <div className="encore-voice-cta">
+      <button className="btn" onClick={summon} disabled={state === "working"}>
+        <Icon name={state === "working" ? "clock" : "sparkle"} />
+        {state === "working" ? "The Emcee is taking the mic…" : "Hear the curtain call"}
+      </button>
     </div>
   );
 }

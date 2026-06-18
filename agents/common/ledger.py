@@ -42,6 +42,7 @@ VALID_KINDS = {
     "Approval",
     "Policy",
     "PolishNote",   # the Producer's post-session code-polish suggestions (advisory)
+    "CurtainCall",  # the Emcee's agent-voiced Encore narration (flavor; OSS lane)
 }
 
 
