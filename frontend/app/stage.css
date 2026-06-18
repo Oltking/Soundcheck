@@ -73,8 +73,8 @@
 .player.spotlit { z-index: 8; padding: 18px 20px 20px; background: var(--surface);
   border-color: var(--live-line); box-shadow: var(--shadow-lg), 0 0 0 1px var(--live-line), 0 0 46px var(--live-glow); }
 /* the seated band recedes while someone's in the light */
-.player.receded { opacity: 0.42; filter: saturate(0.75); box-shadow: var(--shadow-xs); }
-.player.receded:hover { opacity: 0.7; }
+.player.receded { opacity: 0.52; filter: saturate(0.75); box-shadow: var(--shadow-xs); }
+.player.receded:hover { opacity: 0.78; }
 .p-top { display: flex; align-items: center; gap: 9px; }
 .inst { width: 32px; height: 32px; border-radius: 9px; background: var(--paper-well);
   display: grid; place-items: center; border: 1px solid var(--line); flex: none; color: var(--ink); }
