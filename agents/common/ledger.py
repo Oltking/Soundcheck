@@ -41,6 +41,7 @@ VALID_KINDS = {
     "ReviewResult",
     "Approval",
     "Policy",
+    "PolishNote",   # the Producer's post-session code-polish suggestions (advisory)
 }
 
 

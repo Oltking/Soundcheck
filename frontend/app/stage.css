@@ -344,3 +344,21 @@
 }
 
 .encore-open-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s3); }
+
+/* The Producer's notes (polish) on the Encore */
+.encore-polish { margin: var(--s5) auto var(--s6); max-width: 720px; text-align: center; }
+.encore-polish h2 { font-family: var(--display); font-weight: 600; font-size: 22px;
+  display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 var(--s2); }
+.encore-polish h2 svg { width: 18px; height: 18px; color: var(--live-deep); }
+.encore-polish .ep-sub { color: var(--ink-3); font-size: var(--t-sm); margin: 0 0 var(--s4); }
+.polish-list { display: grid; gap: var(--s3); text-align: left; }
+.polish-note { display: grid; grid-template-columns: auto 1fr; gap: var(--s3); align-items: start;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-lg);
+  padding: var(--s4); box-shadow: var(--shadow-sm); }
+.pn-mark { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--live-tint); color: var(--live-deep); }
+.pn-mark svg { width: 15px; height: 15px; }
+.pn-title { font-weight: 600; font-size: var(--t-body); }
+.pn-why { color: var(--ink-2); font-size: var(--t-sm); margin-top: 3px; }
+.encore-polish.ask { background: var(--paper-well); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: var(--s5); }

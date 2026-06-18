@@ -92,6 +92,41 @@ async def remediate(room_id: str, file: str, finding: str, repo_url: str | None 
             "note": "watch the Conductor for the proposed patch, then approve to open the PR"}
 
 
+@app.post("/runs/{room_id}/polish")
+async def polish(room_id: str) -> dict:
+    """The Producer's notes — generate post-session code-polish suggestions for the
+    latest patch. Detached subprocess (run_polish.py) on the OSS lane; it writes
+    PolishNote memories to Band, which then project to the Encore."""
+    patches = _rows(
+        "SELECT * FROM ledger WHERE room_id=? AND kind='PatchProposal' "
+        "ORDER BY created_at DESC LIMIT 1", room_id)
+    if not patches:
+        raise HTTPException(status_code=400, detail="No patch to polish on this run yet.")
+    p = patches[0]
+    reviews = _rows(
+        "SELECT * FROM ledger WHERE room_id=? AND kind='ReviewResult' "
+        "ORDER BY created_at DESC LIMIT 1", room_id)
+    review = (reviews[0]["thought"] if reviews else "") or ""
+
+    # the finding this patch addressed (its first reference), for context
+    refs = json.loads(p.get("refs") or "[]")
+    finding = ""
+    if refs:
+        fr = _rows("SELECT content FROM ledger WHERE room_id=? AND id=? LIMIT 1", room_id, refs[0])
+        finding = (fr[0]["content"] if fr else "") or ""
+    if not finding:
+        finding = (p.get("content") or "").split("\n")[0]
+    patch_txt = f"{p.get('content') or ''}\nRationale: {p.get('thought') or ''}"
+
+    cmd = [sys.executable, str(REPO_ROOT / "scripts" / "run_polish.py"),
+           "--room-id", room_id, "--finding", finding[:500],
+           "--patch", patch_txt[:800], "--review", review[:500], "--patch-id", p["id"]]
+    subprocess.Popen(cmd, cwd=str(REPO_ROOT),
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return {"status": "polish_started",
+            "note": "the Producer is drafting notes — refresh the Encore shortly"}
+
+
 def _run_context(room_id: str) -> str:
     """A compact, factual summary of the run for Customer Service to answer from."""
     rows = _rows("SELECT content FROM ledger WHERE room_id=? AND kind='Finding'", room_id)

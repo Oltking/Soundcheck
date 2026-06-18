@@ -6,10 +6,11 @@
 // replayable. This is the foundation the "continue the work" and the agent-voiced
 // narration build on next. No model tokens spent here.
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { INSTRUMENTS, Icon, SevGlyph, sevKind } from "@/components/glyphs";
 import { FixButton } from "@/components/fix-button";
+import { api } from "@/lib/api";
 import type { FindingEntry, LedgerEntry, TimelineItem } from "@/lib/types";
 
 const FILE_RE = /([A-Za-z0-9_./-]+\.[A-Za-z0-9]{1,8})(?::\d+)?/;
@@ -225,6 +226,12 @@ export function Encore({
         </section>
       )}
 
+      <PolishPanel
+        roomId={roomId}
+        initial={ledger.PolishNote || []}
+        hasPatch={(ledger.PatchProposal || []).length > 0}
+      />
+
       <footer className="encore-foot">
         {d.prs.map((u) => (
           <a key={u} className="btn" href={u} target="_blank" rel="noreferrer">
@@ -236,5 +243,65 @@ export function Encore({
         <Link href={`/run/${roomId}/tape`} className="btn"><Icon name="tape" /> Master Tape</Link>
       </footer>
     </div>
+  );
+}
+
+// The Producer's notes — shows existing PolishNotes, or offers to generate them
+// (OSS lane, written to Band) and polls for them to land.
+function PolishPanel({ roomId, initial, hasPatch }: {
+  roomId: string; initial: LedgerEntry[]; hasPatch: boolean;
+}) {
+  const [notes, setNotes] = useState<LedgerEntry[]>(initial);
+  const [state, setState] = useState<"idle" | "working" | "error">("idle");
+
+  async function ask() {
+    setState("working");
+    try {
+      await api.polish(roomId);
+      // poll for the notes to be written + projected (Producer takes ~10-30s)
+      for (let i = 0; i < 18; i++) {
+        await new Promise((r) => setTimeout(r, 5000));
+        try {
+          const d = await api.runDetail(roomId);
+          const pn = d.ledger_by_kind.PolishNote || [];
+          if (pn.length) { setNotes(pn); setState("idle"); return; }
+        } catch { /* keep polling */ }
+      }
+      setState("idle");
+    } catch {
+      setState("error");
+    }
+  }
+
+  if (notes.length) {
+    return (
+      <section className="encore-polish">
+        <h2><Icon name="sparkle" /> The Producer&apos;s notes</h2>
+        <p className="ep-sub">How the patched code could be polished further — suggestions only, nothing applied.</p>
+        <div className="polish-list">
+          {notes.map((n, i) => (
+            <div key={n.id || i} className="polish-note">
+              <span className="pn-mark"><Icon name="sparkle" /></span>
+              <div className="pn-body">
+                <div className="pn-title">{(n.content || "").split("\n")[0]}</div>
+                {n.thought && <div className="pn-why">{n.thought}</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (!hasPatch) return null;
+  return (
+    <section className="encore-polish ask">
+      <h2><Icon name="sparkle" /> The Producer&apos;s notes</h2>
+      <p className="ep-sub">Ask the band how the patched code could be polished further — a few concrete, defensive-only next steps.</p>
+      <button className="btn btn-primary" onClick={ask} disabled={state === "working"}>
+        <Icon name={state === "working" ? "clock" : "sparkle"} />
+        {state === "working" ? "The Producer is drafting…" : state === "error" ? "Retry" : "Ask for polish notes"}
+      </button>
+    </section>
   );
 }

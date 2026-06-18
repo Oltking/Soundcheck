@@ -45,6 +45,7 @@ export const api = {
   remediate: (id: string, file: string, finding: string) =>
     post<{ status: string }>(
       `/runs/${id}/remediate?file=${encodeURIComponent(file)}&finding=${encodeURIComponent(finding)}`),
+  polish: (id: string) => post<{ status: string }>(`/runs/${id}/polish`),
   ask: (id: string, question: string) =>
     post<{ status: string; cold_start: boolean }>(
       `/runs/${id}/ask?question=${encodeURIComponent(question)}`),
