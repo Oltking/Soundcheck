@@ -379,3 +379,30 @@
   color: var(--ink-3); font-size: var(--t-xs); letter-spacing: .04em; }
 .encore-voice-cta { position: relative; z-index: 1; text-align: center; margin: 0 auto var(--s4); }
 .encore-voice-cta .btn svg { color: var(--live-deep); }
+
+/* The Mic — the voiced run-walkthrough control + the speaking caption. */
+.stage-mic { display: flex; flex-direction: column; gap: var(--s2); padding: var(--s2) var(--s5) 0; }
+.mic-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: var(--r-pill); cursor: pointer;
+  background: var(--ink); color: var(--paper); border: 1px solid var(--ink);
+  font-size: var(--t-sm); font-weight: 600; transition: transform .12s ease, background .12s ease; }
+.mic-btn:hover { transform: translateY(-1px); }
+.mic-btn svg { width: 15px; height: 15px; }
+.stage-mic.on .mic-btn { background: var(--live-deep); border-color: var(--live-deep); }
+.mic-cap { display: flex; align-items: center; gap: var(--s3);
+  background: var(--live-tint); border: 1px solid var(--live-line); border-radius: var(--r-lg);
+  padding: var(--s3) var(--s4); animation: micCapIn .3s ease both; }
+@keyframes micCapIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.mc-ico { width: 34px; height: 34px; flex: none; display: grid; place-items: center;
+  border-radius: 50%; background: var(--paper); color: var(--live-deep); border: 1px solid var(--live-line); }
+.mc-ico svg { width: 19px; height: 19px; }
+.mc-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.mc-name { font-size: var(--t-sm); font-weight: 700; }
+.mc-line { font-size: var(--t-body); color: var(--ink); line-height: 1.35; }
+.mc-eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 16px; flex: none; }
+.mc-eq i { width: 3px; background: var(--live-deep); border-radius: 1px; height: 40%;
+  animation: micEq .9s ease-in-out infinite; }
+.mc-eq i:nth-child(1) { animation-delay: 0s; } .mc-eq i:nth-child(2) { animation-delay: .15s; }
+.mc-eq i:nth-child(3) { animation-delay: .3s; } .mc-eq i:nth-child(4) { animation-delay: .12s; }
+@keyframes micEq { 0%, 100% { height: 30%; } 50% { height: 100%; } }
+.mic-note { font-size: var(--t-xs); color: var(--ink-3); }

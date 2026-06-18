@@ -52,7 +52,7 @@ export function SevChip({ kind, label }: { kind: SevKind; label?: string }) {
 }
 
 type IconName = "play" | "pause" | "tape" | "github" | "arrowUpRight" | "handoff"
-  | "check" | "sparkle" | "settings" | "clock" | "chevron" | "dot";
+  | "check" | "sparkle" | "settings" | "clock" | "chevron" | "dot" | "mic" | "stop";
 
 export function Icon({ name, sw = 1.7 }: { name: IconName; sw?: number }) {
   const p: Record<IconName, ReactNode> = {
@@ -68,6 +68,8 @@ export function Icon({ name, sw = 1.7 }: { name: IconName; sw?: number }) {
     clock: <g><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3.5 2" /></g>,
     chevron: <path d="M9 6l6 6-6 6" />,
     dot: <circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none" />,
+    mic: <g><rect x="9" y="2.5" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0" /><path d="M12 17.5V21" /><path d="M8.5 21h7" /></g>,
+    stop: <rect x="6" y="6" width="12" height="12" rx="2.4" fill="currentColor" stroke="none" />,
   };
   return (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">{p[name]}</svg>);
 }

@@ -16,6 +16,7 @@ import { MentionText } from "@/components/mention-text";
 import { StageChat } from "@/components/stage-chat";
 import { FixButton } from "@/components/fix-button";
 import { ApproveAction } from "@/components/approve-action";
+import { StageMic, buildWalkthrough } from "@/components/stage-mic";
 import type { FindingEntry, LedgerEntry, TimelineItem } from "@/lib/types";
 
 // Best-effort file location from a finding's content (e.g. "app.py:23" → app.py).
@@ -256,6 +257,16 @@ export function StageView({
   const idle = lastTs > 0 && Date.now() - lastTs > 25000;
   const auditDone = findings.length > 0 && (!liveOn || idle);
 
+  // The Mic — once the set is done, the band can re-perform in words. Build the
+  // ordered, spoken walkthrough from the same live timeline + ledger.
+  const walkthrough = useMemo(
+    () => buildWalkthrough(timeline, players, findings, ledger),
+    [timeline, players, findings, ledger]);
+  const focusSeat = (i: number | null) => {
+    if (i == null) setPinned(false);
+    else { setSpot(i); setPinned(true); }
+  };
+
   // remediation gate — the loop is now visible AND actionable on the Stage
   const patch = ledger.PatchProposal?.[0];
   const review = ledger.ReviewResult?.[0];
@@ -332,6 +343,10 @@ export function StageView({
         <span><i className="lg-thread" /> whoever’s performing steps into the spotlight</span>
         <span><i className="lg-podium" /> you preside — nothing ships without sign-off</span>
       </div>
+
+      {auditDone && walkthrough.length > 0 && (
+        <StageMic turns={walkthrough} onFocus={focusSeat} />
+      )}
 
       <div className="stage-body" ref={bodyRef}>
         {narrow ? (
