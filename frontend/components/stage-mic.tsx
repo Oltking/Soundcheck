@@ -54,6 +54,77 @@ function nameList(ns: string[]): string {
   return ns.slice(0, -1).join(", ") + " and " + ns[ns.length - 1];
 }
 
+const uniq = (xs: string[]) => [...new Set(xs.filter(Boolean))];
+
+// A task event's headline — drop the "Evidence: file:line (redacted)" tail and
+// any "Task completed:" prefix so the agent speaks the gist, not the raw log.
+function cleanTask(s: string): string {
+  let t = norm(s)
+    .replace(/\s*Evidence:.*$/is, "")
+    .replace(/\(redacted\)/gi, "")
+    .replace(/^Task completed:\s*/i, "")
+    .replace(/\s+/g, " ").trim()
+    .replace(/[.,;:]+$/, "");
+  if (t.length > 60) {
+    t = t.slice(0, 60);
+    const sp = t.lastIndexOf(" ");
+    if (sp > 20) t = t.slice(0, sp);
+    t += "…";
+  }
+  return t;
+}
+
+// A thought, tidied and capped at a sentence-ish length for speaking aloud.
+function cleanThought(s: string): string {
+  let t = norm(s).replace(/\(redacted\)/gi, "").replace(/\s+/g, " ").trim();
+  if (t.length > 150) { t = t.slice(0, 150); t = t.slice(0, t.lastIndexOf(" ")) + "…"; }
+  return t.replace(/[.,;:\s]+$/, "");
+}
+
+// The most substantive thought in a turn (skip terse "Starting…" filler).
+function pickThought(thoughts: string[]): string {
+  const good = thoughts
+    .map(norm)
+    .filter((t) => t.length >= 30 && !/^starting\b/i.test(t))
+    .sort((a, b) => b.length - a.length);
+  return good.length ? cleanThought(good[0]) : "";
+}
+
+function frameworkOf(t: string): string {
+  const s = norm(t);
+  if (/^iso/i.test(s)) return "ISO 27001";
+  if (/^soc\s*2|^soc2/i.test(s)) return "SOC 2";
+  if (/^owasp/i.test(s)) return "OWASP";
+  if (/^nist/i.test(s)) return "NIST";
+  return "";
+}
+
+// What the agent did beyond the handoff — a short digest of its task events,
+// shaped to the part (stages for the Bandleader, frameworks for the Mapper,
+// finding/headline gist for everyone else).
+function taskDigest(part: Part, tasks: string[]): string {
+  if (!tasks.length) return "";
+  if (part === "bandleader") {
+    const stages = uniq(tasks.map((t) => t.match(/Audit stage:\s*([A-Z][A-Z ]{1,})/)?.[1]?.trim() || ""));
+    if (stages.length) return `I moved us through the ${nameList(stages)} stage${stages.length > 1 ? "s" : ""}.`;
+  }
+  if (part === "mapper") {
+    const fw = uniq(tasks.map(frameworkOf));
+    if (fw.length) return `I tagged controls across ${nameList(fw)}.`;
+  }
+  const items = uniq(tasks.map(cleanTask).filter((s) => s.length > 3)).slice(0, 3);
+  return items.length ? `Along the way: ${nameList(items)}.` : "";
+}
+
+function enrich(part: Part, tasks: string[], thoughts: string[]): string {
+  const out: string[] = [];
+  const td = taskDigest(part, tasks);
+  if (td) out.push(td);
+  const th = pickThought(thoughts);
+  if (th) out.push(`My read: ${th}.`);
+  return out.join(" ");
+}
+
 interface Arts { findings: number; controls: number; file: string; verdict: string }
 
 function compose(
@@ -148,6 +219,31 @@ export function buildWalkthrough(
     if (isCS(g.name) || handsToCS) { cut = i; break; }
   }
   const perf = groups.slice(0, cut);
+  const cutTime = cut < groups.length ? norm(groups[cut].items[0].created_at) || "9999" : "9999";
+
+  // each turn's closing time, and the turn indices per agent (in order)
+  const turnTime = perf.map((g) => norm(g.items[g.items.length - 1].created_at));
+  const turnsOf = new Map<string, number[]>();
+  perf.forEach((g, i) => { const a = turnsOf.get(g.name) || []; a.push(i); turnsOf.set(g.name, a); });
+
+  // bucket each agent's THOUGHT and TASK events into the turn they belong to —
+  // its next text report (work happens, then the agent reports), so each turn
+  // can also speak what it did and was reasoning about, not just the handoff.
+  const buckets = new Map<number, { task: string[]; thought: string[] }>();
+  for (const m of timeline) {
+    if (m.sender_type === "User") continue;
+    if (m.mtype !== "task" && m.mtype !== "thought") continue;
+    const name = norm(m.sender);
+    const idxs = turnsOf.get(name);
+    if (!idxs) continue;
+    const t = norm(m.created_at);
+    if (t > cutTime) continue; // skip post-audit (Q&A) activity
+    let target = idxs[idxs.length - 1];
+    for (const ti of idxs) { if (t <= turnTime[ti]) { target = ti; break; } }
+    const b = buckets.get(target) || { task: [], thought: [] };
+    (m.mtype === "task" ? b.task : b.thought).push(norm(m.content));
+    buckets.set(target, b);
+  }
 
   const lastPos = new Map<string, number>();
   perf.forEach((g, i) => lastPos.set(g.name, i));
@@ -174,7 +270,9 @@ export function buildWalkthrough(
       : base;
     artsDone.add(g.name);
 
-    const line = compose(part, g.name, p.role, n, handoff, arts, lastPos.get(g.name) === gi, hasApproval);
+    const summary = compose(part, g.name, p.role, n, handoff, arts, lastPos.get(g.name) === gi, hasApproval);
+    const b = buckets.get(gi) || { task: [], thought: [] };
+    const line = [summary, enrich(part, b.task, b.thought)].filter(Boolean).join(" ");
     return { name: g.name, inst: p.inst, part, role: p.role, line, playerIndex: index.get(g.name)! };
   });
 }
