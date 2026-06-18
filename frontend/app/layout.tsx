@@ -3,6 +3,7 @@ import "./tokens.css";
 import "./globals.css";
 import "./app.css";
 import { Nav } from "@/components/nav";
+import { auth } from "@/auth";
 
 export const metadata: Metadata = {
   title: {
@@ -22,12 +23,13 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "Soundcheck" },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
   return (
     <html lang="en">
       <body>
         <div className="app-shell">
-          <Nav />
+          <Nav user={session?.user ?? null} />
           {children}
         </div>
       </body>

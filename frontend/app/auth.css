@@ -1,0 +1,61 @@
+/* Login / sign-up — a centered card on the paper background. */
+.auth-page {
+  min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--s5); padding: var(--s6) var(--s4);
+  background:
+    radial-gradient(110% 70% at 50% -10%, rgba(37,99,235,0.08), transparent 60%),
+    var(--paper);
+}
+.auth-brand { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: var(--ink); }
+.auth-brand img { border-radius: 7px; }
+.auth-brand .wm { font-family: var(--display); font-size: 20px; letter-spacing: -0.01em; }
+.auth-brand .wm b { font-weight: 600; }
+
+.auth-card {
+  width: 100%; max-width: 400px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg); padding: var(--s6) var(--s5);
+}
+.auth-head { text-align: center; margin-bottom: var(--s5); }
+.auth-head h1 { font-family: var(--display); font-weight: 600; font-size: 28px; margin: 0 0 6px;
+  letter-spacing: -0.01em; }
+.auth-head p { color: var(--ink-2); font-size: var(--t-sm); margin: 0; line-height: 1.5; }
+
+.auth-oauth {
+  width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 11px 14px; border-radius: var(--r); cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line-strong); color: var(--ink);
+  font: inherit; font-size: var(--t-sm); font-weight: 600; transition: background .12s ease, border-color .12s ease;
+}
+.auth-oauth:hover { background: var(--surface-2); border-color: var(--ink-4); }
+
+.auth-or { display: flex; align-items: center; gap: var(--s3); margin: var(--s4) 0; color: var(--ink-3); }
+.auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.auth-or span { font-size: var(--t-xs); font-family: var(--mono); }
+
+.auth-form { display: flex; flex-direction: column; gap: var(--s3); }
+.auth-form label { display: flex; flex-direction: column; gap: 5px; }
+.auth-form label span { font-size: var(--t-xs); font-weight: 600; color: var(--ink-2); }
+.auth-form input {
+  font: inherit; font-size: var(--t-sm); padding: 10px 12px; color: var(--ink);
+  background: var(--surface-3); border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+}
+.auth-form input:focus { outline: none; border-color: var(--live-line); box-shadow: var(--glow-live); }
+
+.auth-err { font-size: var(--t-xs); color: var(--severe); background: var(--severe-tint);
+  border: 1px solid var(--severe-line); border-radius: var(--r-sm); padding: 7px 10px; }
+
+.auth-submit {
+  margin-top: var(--s2); width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 11px 14px; border-radius: var(--r); cursor: pointer;
+  background: var(--live); color: var(--on-accent); border: 1px solid var(--live-deep);
+  font: inherit; font-size: var(--t-sm); font-weight: 650; box-shadow: var(--glow-live);
+  transition: background .12s ease, transform .12s ease;
+}
+.auth-submit:hover:not(:disabled) { background: var(--live-deep); transform: translateY(-1px); }
+.auth-submit:disabled { opacity: .6; cursor: default; }
+.auth-submit svg { width: 15px; height: 15px; }
+
+.auth-alt { text-align: center; margin: var(--s5) 0 0; font-size: var(--t-sm); color: var(--ink-2); }
+.auth-alt a { color: var(--live-deep); font-weight: 600; text-decoration: none; }
+.auth-alt a:hover { text-decoration: underline; }

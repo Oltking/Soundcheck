@@ -35,6 +35,18 @@
   width: 28px; height: 28px; border-radius: var(--r-pill); display: grid; place-items: center;
   background: var(--ink); color: var(--on-accent); font-size: var(--t-xs); font-weight: 600;
 }
+.nav .nav-user { display: flex; align-items: center; gap: var(--s3); }
+.nav .nav-signout {
+  font: inherit; font-size: var(--t-xs); font-weight: 600; color: var(--ink-3);
+  background: none; border: 1px solid var(--line); border-radius: var(--r-pill);
+  padding: 5px 12px; cursor: pointer; transition: color .12s ease, border-color .12s ease;
+}
+.nav .nav-signout:hover { color: var(--ink); border-color: var(--ink-4); }
+.nav .nav-signin {
+  font-size: var(--t-sm); font-weight: 600; color: var(--on-accent); text-decoration: none;
+  background: var(--ink); border-radius: var(--r-pill); padding: 7px 16px;
+}
+.nav .nav-signin:hover { background: var(--live-deep); }
 
 /* ---- page frame ---- */
 .page { flex: 1; max-width: 1180px; width: 100%; margin: 0 auto; padding: var(--s6) var(--s5); }
