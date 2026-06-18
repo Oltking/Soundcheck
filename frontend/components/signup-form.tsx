@@ -5,7 +5,6 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/glyphs";
-import { GoogleMark } from "@/components/google-mark";
 
 export function SignupForm({ callbackUrl }: { callbackUrl: string }) {
   const router = useRouter();
@@ -53,12 +52,6 @@ export function SignupForm({ callbackUrl }: { callbackUrl: string }) {
         <h1>Join the band</h1>
         <p>Just a nickname, an email, and a password — that&apos;s it.</p>
       </div>
-
-      <button className="auth-oauth" onClick={() => signIn("google", { callbackUrl })}>
-        <GoogleMark /> Continue with Google
-      </button>
-
-      <div className="auth-or"><span>or</span></div>
 
       <form className="auth-form" onSubmit={onSubmit}>
         <label>

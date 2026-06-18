@@ -21,18 +21,6 @@
   letter-spacing: -0.01em; }
 .auth-head p { color: var(--ink-2); font-size: var(--t-sm); margin: 0; line-height: 1.5; }
 
-.auth-oauth {
-  width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-  padding: 11px 14px; border-radius: var(--r); cursor: pointer;
-  background: var(--surface); border: 1px solid var(--line-strong); color: var(--ink);
-  font: inherit; font-size: var(--t-sm); font-weight: 600; transition: background .12s ease, border-color .12s ease;
-}
-.auth-oauth:hover { background: var(--surface-2); border-color: var(--ink-4); }
-
-.auth-or { display: flex; align-items: center; gap: var(--s3); margin: var(--s4) 0; color: var(--ink-3); }
-.auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-.auth-or span { font-size: var(--t-xs); font-family: var(--mono); }
-
 .auth-form { display: flex; flex-direction: column; gap: var(--s3); }
 .auth-form label { display: flex; flex-direction: column; gap: 5px; }
 .auth-form label span { font-size: var(--t-xs); font-weight: 600; color: var(--ink-2); }

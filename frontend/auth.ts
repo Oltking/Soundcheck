@@ -1,13 +1,10 @@
 import NextAuth, { type NextAuthConfig } from "next-auth";
-import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import PostgresAdapter from "@auth/pg-adapter";
 import bcrypt from "bcryptjs";
 import { pool } from "@/lib/db";
 import { authConfig } from "./auth.config";
 
-// Google is only registered once its credentials exist, so the app still boots
-// (email/password only) before they're configured.
 const providers: NextAuthConfig["providers"] = [
   Credentials({
     credentials: { email: {}, password: {} },
@@ -20,20 +17,17 @@ const providers: NextAuthConfig["providers"] = [
         [email],
       );
       const u = rows[0];
-      if (!u || !u.password) return null; // no such user, or an OAuth-only account
+      if (!u || !u.password) return null;
       const ok = await bcrypt.compare(password, u.password);
       if (!ok) return null;
       return { id: String(u.id), name: u.name, email: u.email, image: u.image };
     },
   }),
 ];
-if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
-  providers.unshift(Google({ allowDangerousEmailAccountLinking: true }));
-}
 
 // Full Auth.js config (Node runtime). Sessions are JWT (required by the
-// Credentials provider); the Postgres adapter persists Google sign-ins and is
-// the source of truth for the users table that email/password sign-in reads.
+// Credentials provider); the Postgres `users` table is the source of truth that
+// email/password sign-in reads, and where sign-up writes.
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PostgresAdapter(pool),
