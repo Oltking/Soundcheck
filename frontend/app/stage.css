@@ -332,7 +332,14 @@
   .score-list { max-height: 56vh; }
   .stage-legend { gap: 6px var(--s4); }
   .stage-now { display: none; }
-  .sc-dock, .stage-chat.open { right: var(--s4); }
+  .sc-dock, .stage-chat.open { right: var(--s4); top: var(--s3); }
+  .sc-hint { display: none; }              /* the wide hint would cover the card */
+  .sc-fab { padding: 7px 13px 7px 7px; font-size: var(--t-xs); }
+  .sc-fab-ico { width: 21px; height: 21px; }
+  .stage-mic { padding: var(--s2) var(--s4) 0; }
+  .mic-cap { padding: var(--s2) var(--s3); gap: var(--s2); }
+  .mic-cap .mc-line { font-size: var(--t-sm); }
+  .mic-btn { font-size: var(--t-xs); padding: 7px 12px; }
 }
 
 /* ============ The Encore — post-session curtain call ============ */

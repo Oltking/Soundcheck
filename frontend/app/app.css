@@ -510,6 +510,11 @@
   .nav .links { margin-left: var(--s2); }
   .nav .cond-chip { display: none; }
   .run-bar { align-items: flex-start; }
+  /* the 5-tab strip becomes a horizontally-scrollable rail so it never overflows */
+  .run-tabs { width: 100%; display: flex; overflow-x: auto; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch; }
+  .run-tabs::-webkit-scrollbar { display: none; }
+  .run-tabs a { flex: none; white-space: nowrap; padding: 6px 13px; }
 }
 @media (max-width: 640px) {
   .setlist { grid-template-columns: 1fr 1fr; }
@@ -522,6 +527,13 @@
   .findings-summary { flex-direction: column; align-items: flex-start; }
   .deliverable .dl-actions { width: 100%; }
   .deliverable .dl-actions .btn { flex: 1; justify-content: center; }
+  /* tighten the run header so it reads cleanly on a phone */
+  .run-id { font-size: 18px; }
+  .run-counts-row { gap: var(--s2) var(--s4); margin: var(--s2) 0; }
+  .run-progress { gap: 5px; }
+  .rp-step { padding: 4px 10px 4px 5px; }
+  .rp-label { font-size: 11px; }
+  .page-head h1 { font-size: var(--t-h1); }
 }
 @media (max-width: 440px) {
   .setlist { grid-template-columns: 1fr; }
