@@ -1,6 +1,9 @@
 import "../../stage.css";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { api } from "@/lib/api";
+import { auth } from "@/auth";
+import { isOwner } from "@/lib/owner";
 import { RunTabs } from "@/components/run-tabs";
 import { Icon, SevGlyph } from "@/components/glyphs";
 import { runName, runShortId, runStatus } from "@/lib/run-name";
@@ -21,6 +24,13 @@ export default async function RunLayout({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+
+  // tenancy gate: you can only open a run you own
+  const session = await auth();
+  if (session?.user?.id && !(await isOwner(id, session.user.id))) {
+    redirect("/app");
+  }
+
   let run: Run | null = null;
   try {
     run = (await api.listRuns()).runs.find((r) => r.room_id === id) || null;

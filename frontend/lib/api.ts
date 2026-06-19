@@ -49,6 +49,10 @@ export const api = {
   ask: (id: string, question: string) =>
     post<{ status: string; cold_start: boolean }>(
       `/runs/${id}/ask?question=${encodeURIComponent(question)}`),
+  // Same-origin Next.js route (NOT the BFF) — records run ownership for the user.
+  claimRun: (id: string) =>
+    fetch(`/api/runs/${encodeURIComponent(id)}/claim`, { method: "POST" })
+      .then((r) => r.json() as Promise<{ ok?: boolean; error?: string }>),
 };
 
 export { BASE as BFF_BASE };

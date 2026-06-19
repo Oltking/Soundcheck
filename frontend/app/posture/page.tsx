@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { auth } from "@/auth";
+import { ownedRoomIds } from "@/lib/owner";
 import { SevGlyph, sevKind } from "@/components/glyphs";
 import { runName, runShortId } from "@/lib/run-name";
 import type { Run } from "@/lib/types";
@@ -8,9 +10,14 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Posture" };
 
 export default async function Posture() {
+  const session = await auth();
   let runs: Run[] = [];
   try {
     runs = (await api.listRuns()).runs;
+    if (session?.user?.id) {
+      const owned = await ownedRoomIds(session.user.id);
+      runs = runs.filter((r) => owned.has(r.room_id));
+    }
   } catch {
     return <main className="page"><div className="error-banner">Backend (BFF) unreachable on :8000.</div></main>;
   }

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { auth } from "@/auth";
+import { ownedRoomIds } from "@/lib/owner";
 import { Connect } from "@/components/connect";
 import { Icon } from "@/components/glyphs";
 import { runName, runShortId, runStatus } from "@/lib/run-name";
@@ -14,10 +16,16 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Runs" };
 
 export default async function AppHome() {
+  const session = await auth();
   let runs: Run[] = [];
   let error: string | null = null;
   try {
     runs = (await api.listRuns()).runs;
+    // tenancy: show only the runs this user owns
+    if (session?.user?.id) {
+      const owned = await ownedRoomIds(session.user.id);
+      runs = runs.filter((r) => owned.has(r.room_id));
+    }
   } catch (e) {
     error = `Could not reach the backend (BFF) on :8000. (${(e as Error).message})`;
   }

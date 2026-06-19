@@ -45,15 +45,21 @@ export function Connect({ knownRoomIds }: { knownRoomIds: string[] }) {
   async function start() {
     setState("starting");
     try {
+      // snapshot ALL rooms now (not just mine) so the room we discover next is
+      // genuinely new — then we claim it for this user.
+      const before = new Set<string>(knownRoomIds);
+      try {
+        (await api.listRuns()).runs.forEach((r) => before.add(r.room_id));
+      } catch { /* fall back to knownRoomIds */ }
       await api.startRun(target.trim() || undefined);
       setState("waiting");
-      const known = new Set(knownRoomIds);
       for (let i = 0; i < 40; i++) {
         await new Promise((r) => setTimeout(r, 4000));
         await api.refreshAll().catch(() => {});
         const { runs } = await api.listRuns();
-        const fresh = runs.find((r) => !known.has(r.room_id));
+        const fresh = runs.find((r) => !before.has(r.room_id));
         if (fresh) {
+          await api.claimRun(fresh.room_id).catch(() => {});
           router.push(`/run/${fresh.room_id}/stage?live=1`);
           return;
         }
