@@ -49,8 +49,9 @@ export function Connect() {
       // the new room - all server-side, so the client never sees others' runs.
       const { baseline } = await api.startAndWatch(target.trim() || undefined);
       setState("waiting");
-      for (let i = 0; i < 40; i++) {
-        await new Promise((r) => setTimeout(r, 4000));
+      // poll fast (cheap call) so we land on the Stage the moment the room opens
+      for (let i = 0; i < 90; i++) {
+        await new Promise((r) => setTimeout(r, 1200));
         const { roomId } = await api.discoverRun(baseline).catch(() => ({ roomId: null }));
         if (roomId) {
           router.push(`/run/${roomId}/stage?live=1`);

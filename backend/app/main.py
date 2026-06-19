@@ -195,6 +195,15 @@ async def refresh_one(room_id: str) -> dict:
     return await projection.project_room(room_id)
 
 
+@app.get("/rooms")
+async def list_rooms(limit: int = 50) -> dict:
+    """Just the room ids straight from Band (one cheap call) — no projection.
+    Used to discover a just-started run fast, without re-projecting everything."""
+    rooms = await band_reader.list_known_rooms(limit=limit)
+    return {"rooms": [{"room_id": r.get("id"), "created_at": r.get("inserted_at")}
+                      for r in rooms if r.get("id")]}
+
+
 # -- reads from the cache --------------------------------------------------
 
 def _rows(sql: str, *params) -> list[dict]:

@@ -32,6 +32,8 @@ async function post<T>(path: string): Promise<T> {
 
 export const api = {
   listRuns: () => get<{ runs: Run[] }>("/runs"),
+  // cheap: room ids straight from Band, no projection (for fast run discovery)
+  roomIds: () => get<{ rooms: { room_id: string; created_at: string | null }[] }>("/rooms"),
   runDetail: (id: string) =>
     get<{ run: Run; ledger_by_kind: Record<string, LedgerEntry[]> }>(`/runs/${id}`),
   findings: (id: string) => get<{ findings: FindingEntry[] }>(`/runs/${id}/findings`),

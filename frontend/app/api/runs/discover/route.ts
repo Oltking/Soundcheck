@@ -16,9 +16,10 @@ export async function POST(req: Request) {
   const seen = new Set(baseline);
 
   try {
-    await api.refreshAll();
-    const { runs } = await api.listRuns();
-    const fresh = runs
+    // one cheap Band call — the new room shows here the instant it's created,
+    // long before a full projection would finish.
+    const { rooms } = await api.roomIds();
+    const fresh = rooms
       .filter((r) => !seen.has(r.room_id))
       .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))[0];
     if (fresh) {

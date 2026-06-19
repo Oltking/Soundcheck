@@ -130,7 +130,7 @@ export function StageView({
       } catch { /* ignore */ }
     }
     pull();
-    const iv = setInterval(pull, 6000);
+    const iv = setInterval(pull, 4000);
     return () => { alive = false; clearInterval(iv); };
   }, [roomId, liveOn]);
 
@@ -143,7 +143,7 @@ export function StageView({
       .catch(() => {});
     load();
     if (!liveOn) return () => { alive = false; };
-    const iv = setInterval(load, 6000);
+    const iv = setInterval(load, 4000);
     return () => { alive = false; clearInterval(iv); };
   }, [roomId, liveOn]);
 

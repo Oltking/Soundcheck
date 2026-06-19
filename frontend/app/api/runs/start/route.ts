@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   const target = new URL(req.url).searchParams.get("target") || undefined;
   let baseline: string[] = [];
   try {
-    baseline = (await api.listRuns()).runs.map((r) => r.room_id);
+    baseline = (await api.roomIds()).rooms.map((r) => r.room_id);
   } catch { /* BFF cold / empty - an empty baseline is fine */ }
 
   try {
