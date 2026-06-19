@@ -96,12 +96,14 @@ function verbOf(e: TimelineItem): string {
 
 export function StageView({
   roomId, initialTimeline = [], initialFindings = [], initialLedger = {}, live = false,
+  conductorName = "You",
 }: {
   roomId: string;
   initialTimeline?: TimelineItem[];
   initialFindings?: FindingEntry[];
   initialLedger?: Record<string, LedgerEntry[]>;
   live?: boolean;
+  conductorName?: string;
 }) {
   const [timeline, setTimeline] = useState<TimelineItem[]>(initialTimeline);
   const [findings, setFindings] = useState<FindingEntry[]>(initialFindings);
@@ -384,7 +386,7 @@ export function StageView({
                   </button>
                 ))}
               </div>
-              <div className="m-podium mono"><b>You</b> · the conductor — nothing ships without sign-off</div>
+              <div className="m-podium mono"><b>{conductorName}</b> · the conductor — nothing ships without sign-off</div>
             </div>
           )
         ) : players.length === 0 ? (
@@ -408,7 +410,7 @@ export function StageView({
                     onClick={() => pickSeat(i)}
                   />
                 ))}
-                <Podium podium={layout.podium} />
+                <Podium podium={layout.podium} name={conductorName} />
               </div>
             </div>
           </div>
@@ -598,11 +600,11 @@ function StageEmpty() {
   );
 }
 
-function Podium({ podium }: { podium: { x: number; y: number } }) {
+function Podium({ podium, name }: { podium: { x: number; y: number }; name: string }) {
   return (
     <div className="podium" style={{ left: podium.x, top: podium.y }}>
       <div className="stand">{INSTRUMENTS.conductor()}</div>
-      <div className="plabel"><b>You</b> · the conductor</div>
+      <div className="plabel"><b>{name}</b> · the conductor</div>
       <div className="sub">final authority · nothing ships without sign-off</div>
     </div>
   );

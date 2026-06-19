@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { auth } from "@/auth";
 import { StageView } from "@/components/stage-view";
 import type { FindingEntry, LedgerEntry, TimelineItem } from "@/lib/types";
 
@@ -12,6 +13,8 @@ export default async function RunStage({
 }) {
   const { id } = await params;
   const { live } = await searchParams;
+  const session = await auth();
+  const conductorName = session?.user?.name || "You";
   let timeline: TimelineItem[] = [];
   let findings: FindingEntry[] = [];
   let ledger: Record<string, LedgerEntry[]> = {};
@@ -32,6 +35,7 @@ export default async function RunStage({
       initialFindings={findings}
       initialLedger={ledger}
       live={live === "1"}
+      conductorName={conductorName}
     />
   );
 }
