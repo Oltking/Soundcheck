@@ -26,7 +26,7 @@ const PHASES = [
   "Almost on stage",
 ];
 
-export function Connect({ knownRoomIds }: { knownRoomIds: string[] }) {
+export function Connect() {
   const router = useRouter();
   const [target, setTarget] = useState("");
   const [state, setState] = useState<"idle" | "starting" | "waiting" | "error">("idle");
@@ -45,22 +45,15 @@ export function Connect({ knownRoomIds }: { knownRoomIds: string[] }) {
   async function start() {
     setState("starting");
     try {
-      // snapshot ALL rooms now (not just mine) so the room we discover next is
-      // genuinely new — then we claim it for this user.
-      const before = new Set<string>(knownRoomIds);
-      try {
-        (await api.listRuns()).runs.forEach((r) => before.add(r.room_id));
-      } catch { /* fall back to knownRoomIds */ }
-      await api.startRun(target.trim() || undefined);
+      // start (server snapshots existing rooms), then poll to discover + claim
+      // the new room — all server-side, so the client never sees others' runs.
+      const { baseline } = await api.startAndWatch(target.trim() || undefined);
       setState("waiting");
       for (let i = 0; i < 40; i++) {
         await new Promise((r) => setTimeout(r, 4000));
-        await api.refreshAll().catch(() => {});
-        const { runs } = await api.listRuns();
-        const fresh = runs.find((r) => !before.has(r.room_id));
-        if (fresh) {
-          await api.claimRun(fresh.room_id).catch(() => {});
-          router.push(`/run/${fresh.room_id}/stage?live=1`);
+        const { roomId } = await api.discoverRun(baseline).catch(() => ({ roomId: null }));
+        if (roomId) {
+          router.push(`/run/${roomId}/stage?live=1`);
           return;
         }
       }

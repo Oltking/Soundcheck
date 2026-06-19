@@ -56,6 +56,23 @@ app.add_middleware(
     allow_methods=["*"], allow_headers=["*"],
 )
 
+# The BFF is reached only through the authenticated Next.js proxy, which attaches
+# this shared secret. Direct hits (any client without the key) are rejected — so
+# run data can't be pulled straight off :8000, bypassing per-user ownership.
+# If INTERNAL_API_KEY is unset the gate is open (local dev convenience).
+from fastapi import Request  # noqa: E402
+from fastapi.responses import JSONResponse  # noqa: E402
+
+_INTERNAL_KEY = os.environ.get("INTERNAL_API_KEY", "").strip()
+
+
+@app.middleware("http")
+async def require_internal_key(request: Request, call_next):
+    if _INTERNAL_KEY and request.method != "OPTIONS" and request.url.path != "/health":
+        if request.headers.get("x-internal-key") != _INTERNAL_KEY:
+            return JSONResponse({"detail": "forbidden"}, status_code=403)
+    return await call_next(request)
+
 
 @app.get("/health")
 async def health() -> dict:

@@ -36,7 +36,7 @@ export default async function AppHome() {
         <div className="launch-kicker mono">the conductor’s desk</div>
         <h1>Start an audit, or open a run.</h1>
         <p>Connect a repository and the band performs — audit, control-mapping, fix, cross-model review — all through Band, all replayable. You approve every change.</p>
-        <Connect knownRoomIds={runs.map((r) => r.room_id)} />
+        <Connect />
       </section>
 
       <div className="runs-head">

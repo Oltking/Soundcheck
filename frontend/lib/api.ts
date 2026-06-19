@@ -1,26 +1,27 @@
-// Soundcheck BFF client. The frontend renders ONLY live Band data via the BFF
-// (spec §15: no mock data in production). Server components fetch directly;
-// client components use the same helpers.
+// Soundcheck BFF client. The frontend renders ONLY live Band data (spec §15: no
+// mock data in production).
+//
+// Two transports, same helpers:
+//   • Browser  → the authenticated Next.js proxy at /api/bff/* (cookies sent;
+//     the proxy enforces per-user ownership before reaching the BFF).
+//   • Server   → the BFF directly with the shared internal key (server is
+//     trusted; run pages are gated by the run layout).
 
 import type {
   FindingEntry, LedgerEntry, ProvenanceNode, Run, TimelineItem,
 } from "./types";
 
-const BASE = process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:8000";
+const PROXY = "/api/bff";                                   // browser-facing
+const SERVER_BFF = process.env.BFF_INTERNAL_URL || "http://localhost:8000";
+const INTERNAL_KEY = process.env.INTERNAL_API_KEY || "";
 
-// Server components fetch at request time; Node's fetch can't take a relative URL
-// like "/_/backend". So on the server we make it absolute (Vercel's deployment
-// origin); in the browser the relative path is fine.
-function resolveBase(): string {
-  if (/^https?:\/\//i.test(BASE)) return BASE;        // already absolute
-  if (typeof window !== "undefined") return BASE;     // browser → relative is fine
-  const host = process.env.VERCEL_URL;                // server on Vercel
-  if (host) return `https://${host}${BASE}`;
-  return `http://localhost:3000${BASE}`;              // server, local fallback
-}
+const onServer = () => typeof window === "undefined";
 
 async function get<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${resolveBase()}${path}`, { cache: "no-store", ...init });
+  const url = onServer() ? `${SERVER_BFF}${path}` : `${PROXY}${path}`;
+  const headers: Record<string, string> = { ...(init?.headers as Record<string, string>) };
+  if (onServer() && INTERNAL_KEY) headers["X-Internal-Key"] = INTERNAL_KEY;
+  const res = await fetch(url, { cache: "no-store", ...init, headers });
   if (!res.ok) throw new Error(`BFF ${path} -> ${res.status}`);
   return res.json() as Promise<T>;
 }
@@ -49,10 +50,18 @@ export const api = {
   ask: (id: string, question: string) =>
     post<{ status: string; cold_start: boolean }>(
       `/runs/${id}/ask?question=${encodeURIComponent(question)}`),
-  // Same-origin Next.js route (NOT the BFF) — records run ownership for the user.
-  claimRun: (id: string) =>
-    fetch(`/api/runs/${encodeURIComponent(id)}/claim`, { method: "POST" })
-      .then((r) => r.json() as Promise<{ ok?: boolean; error?: string }>),
+  // Start a run + claim it (server-side; the discover step records ownership).
+  startAndWatch: (target?: string) =>
+    fetch(`/api/runs/start${target ? `?target=${encodeURIComponent(target)}` : ""}`, { method: "POST" })
+      .then((r) => r.json() as Promise<{ baseline: string[] }>),
+  discoverRun: (baseline: string[]) =>
+    fetch(`/api/runs/discover`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ baseline }),
+    }).then((r) => r.json() as Promise<{ roomId: string | null }>),
 };
 
-export { BASE as BFF_BASE };
+// Browser-facing base for direct links (e.g. the audit-package download) — goes
+// through the authenticated proxy so ownership is enforced.
+export const BFF_BASE = PROXY;
