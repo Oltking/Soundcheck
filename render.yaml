@@ -1,5 +1,6 @@
 # Render Blueprint — the full live BFF + agents host.
-# Frontend stays on Vercel and points NEXT_PUBLIC_BFF_URL at this service's URL.
+# The Vercel frontend reaches this service SERVER-SIDE only: set BFF_INTERNAL_URL
+# (this service's https URL) and a matching INTERNAL_API_KEY in the Vercel project.
 services:
   - type: web
     name: soundcheck-bff
@@ -9,7 +10,12 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     envVars:
-      # the Vercel frontend origin(s), comma-separated — for CORS
+      # shared secret the Vercel proxy must send on every request. WITHOUT it the
+      # BFF is open to the world — set it, and set the SAME value on Vercel.
+      - key: INTERNAL_API_KEY
+        sync: false
+      # the Vercel frontend origin(s), comma-separated — for CORS (defensive;
+      # the browser never hits this service directly).
       - key: ALLOWED_ORIGINS
         sync: false
       # model lanes
@@ -25,6 +31,6 @@ services:
         sync: false
       - key: THENVOI_WS_URL
         sync: false
-      # full contents of agent_config.yaml (the 10 agents' credentials)
+      # full contents of agent_config.yaml (the agents' credentials)
       - key: AGENT_CONFIG_YAML
         sync: false

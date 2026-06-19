@@ -1,0 +1,16 @@
+# The BFF + agents image needs Python only — keep the frontend, venv, and
+# heavy docs out of the build context.
+frontend/
+.venv/
+venv/
+.git/
+node_modules/
+**/__pycache__/
+**/*.pyc
+docs/
+design/
+band_research/
+*.md
+.env
+.env.*
+agent_config.yaml
