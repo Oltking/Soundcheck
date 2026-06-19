@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { auth } from "@/auth";
 import { ownedRoomIds } from "@/lib/owner";
 import { Connect } from "@/components/connect";
+import { RefreshOnMount } from "@/components/refresh-on-mount";
 import { Icon } from "@/components/glyphs";
 import { runName, runShortId, runStatus } from "@/lib/run-name";
 import type { Run } from "@/lib/types";
@@ -32,6 +33,7 @@ export default async function AppHome() {
 
   return (
     <main className="page">
+      <RefreshOnMount />
       <section className="launch">
         <div className="launch-kicker mono">the conductor’s desk</div>
         <h1>Start an audit, or open a run.</h1>
