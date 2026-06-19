@@ -4,16 +4,16 @@ import { Icon, INSTRUMENTS, SevGlyph } from "@/components/glyphs";
 import { HeroStage } from "@/components/hero-stage";
 
 export const metadata = {
-  title: "Soundcheck — a workforce that audits, fixes, and proves it",
+  title: "Soundcheck - a workforce that audits, fixes, and proves it",
 };
 
 const STEPS = [
-  { inst: "scout", n: "01", title: "Audit", body: "Scanners read the repo — static analysis, dependency CVEs, committed secrets." },
-  { inst: "mapper", n: "02", title: "Map", body: "Every finding is mapped to SOC 2 / ISO 27001 controls — evidence, not noise." },
+  { inst: "scout", n: "01", title: "Audit", body: "Scanners read the repo - static analysis, dependency CVEs, committed secrets." },
+  { inst: "mapper", n: "02", title: "Map", body: "Every finding is mapped to SOC 2 / ISO 27001 controls - evidence, not noise." },
   { inst: "fixer", n: "03", title: "Fix", body: "The Fixer proposes a safe patch on an isolated branch. Main is never touched." },
-  { inst: "reviewer", n: "04", title: "Review", body: "A different model reviews the diff — cross-model, never self-grading." },
+  { inst: "reviewer", n: "04", title: "Review", body: "A different model reviews the diff - cross-model, never self-grading." },
   { inst: "conductor", n: "05", title: "Approve", body: "You authorize the change. No autonomous merges, ever." },
-  { inst: "bandleader", n: "06", title: "Ship", body: "A pull request opens against the repo — opened for you, never merged." },
+  { inst: "bandleader", n: "06", title: "Ship", body: "A pull request opens against the repo - opened for you, never merged." },
 ] as const;
 
 const BAND = [
@@ -56,7 +56,7 @@ export default function Marketing() {
           <p className="mk-sub">
             Soundcheck is a governed, replayable autonomous workforce for security &amp; compliance.
             A band of specialist agents audits your repo, maps findings to controls, proposes fixes,
-            and reviews them across models — and <b>you approve every change</b>.
+            and reviews them across models - and <b>you approve every change</b>.
           </p>
           <div className="mk-cta-row">
             <Link href="/app" className="mk-btn mk-btn-primary lg">Start an audit <Icon name="handoff" /></Link>
@@ -76,7 +76,7 @@ export default function Marketing() {
 
       {/* ---- marquee strip ---- */}
       <section className="mk-strip">
-        <div className="mk-strip-label mono">coordinated entirely through Band — no side channels</div>
+        <div className="mk-strip-label mono">coordinated entirely through Band - no side channels</div>
         <div className="mk-chips">
           {["Band", "LangGraph", "SOC 2", "ISO 27001", "GitHub", "Provenance ledger", "Cross-model review"].map((c) => (
             <span key={c} className="mk-chip">{c}</span>
@@ -111,7 +111,7 @@ export default function Marketing() {
         <div className="mk-sec-head">
           <div className="mk-kicker mono">the lineup</div>
           <h2>Eight specialists. Two providers. One room.</h2>
-          <p>Genuinely heterogeneous agents — frontier and open-source models, across frameworks — coordinating only through Band.</p>
+          <p>Genuinely heterogeneous agents - frontier and open-source models, across frameworks - coordinating only through Band.</p>
         </div>
         <div className="mk-band-grid">
           {BAND.map((p) => {
@@ -137,9 +137,9 @@ export default function Marketing() {
           <h2>Human authority before anything ships.</h2>
           <p>No autonomous merges. The Fixer proposes; a second model reviews; <b>you sign off</b>. Approval is a real message in the room, captured forever as part of the record.</p>
           <ul className="mk-points">
-            <li><span className="mk-pt-ico"><SevGlyph kind="approved" /></span><div><b>You hold the baton.</b> Every patch waits for your sign-off — captured as an Approval.</div></li>
-            <li><span className="mk-pt-ico"><SevGlyph kind="archive" /></span><div><b>Fully replayable.</b> Scrub the whole run on the Master Tape — every event, in order.</div></li>
-            <li><span className="mk-pt-ico"><SevGlyph kind="live" /></span><div><b>Provenance to the source.</b> Each finding chains back through the Band ledger — the auditor’s deliverable.</div></li>
+            <li><span className="mk-pt-ico"><SevGlyph kind="approved" /></span><div><b>You hold the baton.</b> Every patch waits for your sign-off - captured as an Approval.</div></li>
+            <li><span className="mk-pt-ico"><SevGlyph kind="archive" /></span><div><b>Fully replayable.</b> Scrub the whole run on the Master Tape - every event, in order.</div></li>
+            <li><span className="mk-pt-ico"><SevGlyph kind="live" /></span><div><b>Provenance to the source.</b> Each finding chains back through the Band ledger - the auditor’s deliverable.</div></li>
           </ul>
         </div>
         <div className="mk-split-visual">
@@ -179,7 +179,7 @@ export default function Marketing() {
       <section className="mk-final">
         <div className="mk-final-glow" />
         <h2>Run your first audit.</h2>
-        <p>Connect a repository and watch the band perform — live, on the Stage.</p>
+        <p>Connect a repository and watch the band perform - live, on the Stage.</p>
         <Link href="/app" className="mk-btn mk-btn-primary lg">Enter the app <Icon name="handoff" /></Link>
       </section>
 
@@ -191,7 +191,7 @@ export default function Marketing() {
             <img className="mk-logo sm" src="/logo.png" alt="" width={26} height={26} />
             <span className="mk-wm">sound<b>check</b></span>
           </span>
-          <span className="mk-foot-tag">a governed, replayable agent workforce — built on Band</span>
+          <span className="mk-foot-tag">a governed, replayable agent workforce - built on Band</span>
         </div>
         <div className="mk-foot-meta mono">
           <span>Built for the Band of Agents Hackathon</span>

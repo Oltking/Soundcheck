@@ -30,11 +30,11 @@ export function SignupForm({ callbackUrl }: { callbackUrl: string }) {
         setBusy(false);
         return;
       }
-      // account created — sign straight in
+      // account created - sign straight in
       const signed = await signIn("credentials", { email, password, redirect: false });
       setBusy(false);
       if (!signed || signed.error) {
-        // created, but auto sign-in failed — send them to login
+        // created, but auto sign-in failed - send them to login
         router.push("/login");
         return;
       }
@@ -50,7 +50,7 @@ export function SignupForm({ callbackUrl }: { callbackUrl: string }) {
     <div className="auth-card">
       <div className="auth-head">
         <h1>Join the band</h1>
-        <p>Just a nickname, an email, and a password — that&apos;s it.</p>
+        <p>Just a nickname, an email, and a password - that&apos;s it.</p>
       </div>
 
       <form className="auth-form" onSubmit={onSubmit}>

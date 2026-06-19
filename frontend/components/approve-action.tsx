@@ -1,6 +1,6 @@
 "use client";
 
-// In-site approval. The patch only ships when YOU authorize it — and the
+// In-site approval. The patch only ships when YOU authorize it - and the
 // authorization is a real message in the Band room (the agents read it via the
 // token-free Stage Manager). Band's Human API is Enterprise-gated, so we can't
 // post as you from here; instead this makes it one click: it copies the exact
@@ -37,7 +37,7 @@ export function ApproveAction({ roomId }: { roomId: string }) {
       <div className="approve-actions">
         <button className="btn btn-primary" onClick={copy}>
           <Icon name={copied ? "check" : "handoff"} />
-          {copied ? "Copied — now paste in the room" : "Copy approval message"}
+          {copied ? "Copied - now paste in the room" : "Copy approval message"}
         </button>
         <a className="btn" href={roomUrl} target="_blank" rel="noreferrer" onClick={copy}>
           <Icon name="arrowUpRight" /> Approve in the Band room
@@ -45,7 +45,7 @@ export function ApproveAction({ roomId }: { roomId: string }) {
         <code className="approve-msg mono">{APPROVE_MSG}</code>
       </div>
       <div className="approve-note">
-        No PR is opened without this. Anything other than <b>APPROVE</b> — or no reply — declines.
+        No PR is opened without this. Anything other than <b>APPROVE</b> - or no reply - declines.
       </div>
     </div>
   );

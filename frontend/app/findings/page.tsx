@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { api } from "@/lib/api";
 
-// Legacy route — now run-scoped. Compute the target, THEN redirect (redirect()
+// Legacy route - now run-scoped. Compute the target, THEN redirect (redirect()
 // throws NEXT_REDIRECT, so it must not be inside the try/catch).
 export const dynamic = "force-dynamic";
 

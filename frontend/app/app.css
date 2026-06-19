@@ -279,7 +279,7 @@
 .tr-handoff { display: inline-flex; align-items: center; gap: 4px; }
 .tr-handoff svg { width: 12px; height: 12px; color: var(--live-deep); }
 
-/* @mention highlight — shared by the Master Tape and the Stage */
+/* @mention highlight - shared by the Master Tape and the Stage */
 .mention { color: var(--live-deep); font-weight: 600; white-space: nowrap; }
 
 /* ---- Posture ---- */
@@ -414,7 +414,7 @@
   color: var(--ink-3); }
 .run-counts-row .rcount b { font-size: var(--t-sm); color: var(--ink); font-weight: 650; }
 
-/* run lifecycle progress strip — always shows the next action */
+/* run lifecycle progress strip - always shows the next action */
 .run-progress { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 var(--s4); }
 .rp-step { display: inline-flex; align-items: center; gap: 7px; text-decoration: none;
   font-size: var(--t-xs); font-weight: 600; color: var(--ink-3); padding: 5px 12px 5px 6px;
@@ -443,7 +443,7 @@
   font-size: var(--t-sm); font-weight: 600; color: var(--live-deep); white-space: nowrap; }
 .stage-done .sd-cta svg { width: 15px; height: 15px; }
 
-/* remediation gate — the Fixer → Reviewer → your sign-off loop, on the Stage */
+/* remediation gate - the Fixer → Reviewer → your sign-off loop, on the Stage */
 .stage-remedy { margin-bottom: var(--s4); padding: var(--s3) var(--s4); border-radius: var(--r-lg);
   border: 1px solid var(--line); background: var(--surface-2); }
 .stage-remedy .sr-line { display: flex; align-items: center; gap: var(--s3); }
@@ -506,7 +506,7 @@
 .run-tabs a.on { background: var(--ink); color: var(--on-accent); }
 
 /* ============================================================
-   Responsive — the set list, stat grids, nav and run bar reflow
+   Responsive - the set list, stat grids, nav and run bar reflow
    ============================================================ */
 @media (max-width: 1080px) {
   .setlist { grid-template-columns: repeat(3, 1fr); }

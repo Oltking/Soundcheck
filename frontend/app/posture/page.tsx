@@ -55,7 +55,7 @@ export default async function Posture() {
     <main className="page">
       <div className="page-head">
         <h1>Posture</h1>
-        <div className="sub">Longitudinal view across {runs.length} runs — open findings, controls mapped, remediation shipped.</div>
+        <div className="sub">Longitudinal view across {runs.length} runs - open findings, controls mapped, remediation shipped.</div>
       </div>
 
       <div className="posture-stats">
@@ -105,7 +105,7 @@ export default async function Posture() {
           {runs.map((r) => (
             <Link key={r.room_id} href={`/run/${r.room_id}/stage`} className="rh-row">
               <span className="rh-name">{runName(r.room_id)} <span className="mono rh-id">{runShortId(r.room_id)}</span></span>
-              <span className="rh-when">{r.created_at ? new Date(r.created_at).toLocaleDateString() : "—"}</span>
+              <span className="rh-when">{r.created_at ? new Date(r.created_at).toLocaleDateString() : "-"}</span>
               <span className="rh-bar"><i style={{ width: `${Math.min(100, r.finding_count * 1.5)}%` }} /></span>
               <span className="tnum rh-n">{r.finding_count} findings</span>
             </Link>

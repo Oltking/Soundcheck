@@ -1,4 +1,4 @@
-// Ported from design/stage/glyphs.jsx — instrument glyphs, severity glyphs
+// Ported from design/stage/glyphs.jsx - instrument glyphs, severity glyphs
 // (shape-first for a11y), and UI icons. Severity is SHAPE + colour, never colour
 // alone (spec §9 accessibility).
 

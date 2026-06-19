@@ -1,5 +1,5 @@
 /* ============================================================
-   SOUNDCHECK — Design tokens  ·  LIGHT (white · cream · blue)
+   SOUNDCHECK - Design tokens  ·  LIGHT (white · cream · blue)
    Clean white surfaces, a little warm cream, one confident blue
    accent. Severity by SHAPE + ICON + color (a11y).
    Token NAMES are stable so every screen re-themes from here.
@@ -9,7 +9,7 @@
 
 :root {
   /* ---- Surfaces (white, with cream for warmth) ---- */
-  --paper:        #F8FAFD;  /* base background — cool white */
+  --paper:        #F8FAFD;  /* base background - cool white */
   --paper-well:   #EEF2F8;  /* recessed wells, inset tracks */
   --surface:      #FFFFFF;  /* raised panel */
   --surface-2:    #FFFFFF;  /* highest raised card */
@@ -17,7 +17,7 @@
   --inset:        #E6EBF3;  /* sunken track (scrubber, progress) */
   --scrim:        rgba(20,28,44,0.42);
 
-  /* cream accent — used sparingly for warmth */
+  /* cream accent - used sparingly for warmth */
   --cream:        #F8F2E6;
   --cream-2:      #F3EAD7;
   --cream-line:   #E9DCC2;
@@ -43,23 +43,23 @@
   --live-glow:    rgba(37,99,235,0.20);
 
   /* ---- Semantic states (always paired with a shape) ---- */
-  --attention:      #B5801E;  /* amber — needs review  ▣ square */
+  --attention:      #B5801E;  /* amber - needs review  ▣ square */
   --attention-tint: #F4E9CC;
   --attention-line: #E2CB92;
 
-  --severe:         #C2410C;  /* terracotta — high severity  ◆ diamond */
+  --severe:         #C2410C;  /* terracotta - high severity  ◆ diamond */
   --severe-tint:    #F8DFD2;
   --severe-line:    #ECB89C;
 
-  --approved:       #2F7D4F;  /* green — remediated / approved  ● check */
+  --approved:       #2F7D4F;  /* green - remediated / approved  ● check */
   --approved-tint:  #DBEFE2;
   --approved-line:  #A8D4B8;
 
-  --archive:        #927546;  /* sepia — Master Tape / archive ▽ */
+  --archive:        #927546;  /* sepia - Master Tape / archive ▽ */
   --archive-tint:   #ECE2CC;
   --archive-line:   #D6C49A;
 
-  --info:           #5E6B7C;  /* slate — neutral / info  – line */
+  --info:           #5E6B7C;  /* slate - neutral / info  - line */
   --info-tint:      #E5E9F0;
 
   /* ---- Elevation (soft, light) ---- */

@@ -62,6 +62,6 @@ export const api = {
     }).then((r) => r.json() as Promise<{ roomId: string | null }>),
 };
 
-// Browser-facing base for direct links (e.g. the audit-package download) — goes
+// Browser-facing base for direct links (e.g. the audit-package download) - goes
 // through the authenticated proxy so ownership is enforced.
 export const BFF_BASE = PROXY;

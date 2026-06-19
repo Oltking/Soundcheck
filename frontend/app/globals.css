@@ -1,6 +1,6 @@
 /* Global base. The real design tokens + html/body type live in tokens.css
    (imported first). This file only adds a11y + cross-cutting behaviour and must
-   NOT override the token type ramp (don't re-set body font-family here — that
+   NOT override the token type ramp (don't re-set body font-family here - that
    was silently dropping Inter Tight). */
 
 /* Visible keyboard focus everywhere, on-brand. */

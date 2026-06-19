@@ -1,6 +1,6 @@
 "use client";
 
-// The Master Tape — scrubbable replay of a whole run. The playhead reveals the
+// The Master Tape - scrubbable replay of a whole run. The playhead reveals the
 // timeline up to a point; play advances it; filter by player. Reads the run's
 // full message/event timeline (already projected from the Band trail).
 

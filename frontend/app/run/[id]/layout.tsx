@@ -35,11 +35,11 @@ export default async function RunLayout({
   try {
     run = (await api.listRuns()).runs.find((r) => r.room_id === id) || null;
     if (!run) { await api.refreshOne(id); run = (await api.listRuns()).runs.find((r) => r.room_id === id) || null; }
-  } catch { /* BFF down — children will surface it */ }
+  } catch { /* BFF down - children will surface it */ }
 
   const status = run ? runStatus(run) : null;
 
-  // the lifecycle, derived from the ledger — so the next action is always obvious
+  // the lifecycle, derived from the ledger - so the next action is always obvious
   const steps = run ? [
     { label: "Audit", done: run.finding_count > 0, seg: "stage" },
     { label: "Map", done: run.control_count > 0, seg: "findings" },

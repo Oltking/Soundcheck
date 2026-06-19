@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-// Render message text with @mentions highlighted — so handoffs read exactly like
+// Render message text with @mentions highlighted - so handoffs read exactly like
 // the Band room ("@Bandleader", "@Scout"). The BFF resolves @[[uuid]] tokens to
 // @Names; here we wrap those names in a chip. Names can contain spaces, so we
 // match against the known mention list rather than a naive \w+ regex.

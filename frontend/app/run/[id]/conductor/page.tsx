@@ -10,7 +10,7 @@ function first<T>(arr: T[] | undefined): T | undefined {
   return arr && arr.length ? arr[0] : undefined;
 }
 function fmt(iso: string | null | undefined): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   return new Date(iso).toLocaleString(undefined, {
     month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit",
   });
@@ -54,7 +54,7 @@ export default async function RunConductor({ params }: { params: Promise<{ id: s
   if (chainRoot) {
     try { chain = (await api.chain(id, chainRoot.id)).chain; } catch { /* */ }
   }
-  const verdict = (review?.tags.find((t) => t.startsWith("verdict:")) || "verdict:—").split(":")[1];
+  const verdict = (review?.tags.find((t) => t.startsWith("verdict:")) || "verdict:-").split(":")[1];
 
   return (
     <div style={{ marginTop: "var(--s4)" }}>
@@ -65,7 +65,7 @@ export default async function RunConductor({ params }: { params: Promise<{ id: s
           <div className="seal-meta mono">
             {approved
               ? <>{(approval!.tags.find((t) => t.startsWith("approver:")) || "approver:you").split(":")[1]} · {fmt(approval!.created_at)}</>
-              : <>you hold the baton — nothing ships until you authorize</>}
+              : <>you hold the baton - nothing ships until you authorize</>}
           </div>
         </div>
       </div>
@@ -93,7 +93,7 @@ export default async function RunConductor({ params }: { params: Promise<{ id: s
       {chain && (
         <section className="gov-card">
           <h3><Icon name="tape" /> Provenance chain</h3>
-          <div className="sub" style={{ marginBottom: "var(--s3)" }}>Reconstructed from the Band ledger — the auditor&apos;s deliverable.</div>
+          <div className="sub" style={{ marginBottom: "var(--s3)" }}>Reconstructed from the Band ledger - the auditor&apos;s deliverable.</div>
           <div className="chain"><ChainView node={chain} /></div>
         </section>
       )}
@@ -102,7 +102,7 @@ export default async function RunConductor({ params }: { params: Promise<{ id: s
         <div className="dl-body">
           <h3><Icon name="tape" /> Audit deliverable</h3>
           <p>
-            A self-contained, provenance-complete record — the seal, the patch, the cross-model
+            A self-contained, provenance-complete record - the seal, the patch, the cross-model
             review, and the full chain back to the Band ledger. The artifact an auditor receives.
           </p>
         </div>

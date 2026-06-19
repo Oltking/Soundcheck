@@ -1,11 +1,11 @@
 "use client";
 
-// HeroStage — the marketing centerpiece. The band is placed on a TRUE arc:
+// HeroStage - the marketing centerpiece. The band is placed on a TRUE arc:
 // 7 nodes, even angular spacing (half-span 72°, 24° per step) on an ellipse
 // centred on the podium, so the distances between consecutive players are equal
 // and symmetric, sweeping down to the conductor on the floor. A "thread of light"
-// draws slowly from the speaker to the next player. Pure SVG/CSS, no data — SVG
-// and HTML share one 0–100 coordinate space so the thread meets each icon exactly.
+// draws slowly from the speaker to the next player. Pure SVG/CSS, no data - SVG
+// and HTML share one 0-100 coordinate space so the thread meets each icon exactly.
 
 import { useEffect, useState } from "react";
 import { INSTRUMENTS } from "@/components/glyphs";
@@ -34,7 +34,7 @@ const SAY: Record<string, string> = {
   "Secrets Sentinel": "key redacted at file:line",
 };
 
-const CYCLE = 3800; // ms between handoffs — slow and readable
+const CYCLE = 3800; // ms between handoffs - slow and readable
 
 export function HeroStage() {
   const [active, setActive] = useState(3);

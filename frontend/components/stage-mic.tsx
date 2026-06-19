@@ -1,15 +1,15 @@
 "use client";
 
-// The Mic — a voiced walkthrough of the run. When the set is over, click the
+// The Mic - a voiced walkthrough of the run. When the set is over, click the
 // mic and the band re-performs in words: each agent SPEAKS its own part, in the
 // exact order it was called and responded (Stage Manager → Bandleader → the
 // specialists → back to the Bandleader → Reviewer → …). It's not the raw chat
-// read aloud — each turn is a short first-person summary built deterministically
+// read aloud - each turn is a short first-person summary built deterministically
 // from the timeline + ledger, so it always works and spends no model tokens.
 // Audio uses the browser's Web Speech API (a distinct voice per agent); if
 // speech isn't available it still steps through visually with captions.
 //
-// The backbone is the TEXT messages — the real handoffs ("@Bandleader analysis
+// The backbone is the TEXT messages - the real handoffs ("@Bandleader analysis
 // complete…"). The task-floods (raw evidence) are skipped; the post-audit
 // Customer-Service Q&A is treated as epilogue and left off the walkthrough.
 
@@ -56,7 +56,7 @@ function nameList(ns: string[]): string {
 
 const uniq = (xs: string[]) => [...new Set(xs.filter(Boolean))];
 
-// A task event's headline — drop the "Evidence: file:line (redacted)" tail and
+// A task event's headline - drop the "Evidence: file:line (redacted)" tail and
 // any "Task completed:" prefix so the agent speaks the gist, not the raw log.
 function cleanTask(s: string): string {
   let t = norm(s)
@@ -99,7 +99,7 @@ function frameworkOf(t: string): string {
   return "";
 }
 
-// What the agent did beyond the handoff — a short digest of its task events,
+// What the agent did beyond the handoff - a short digest of its task events,
 // shaped to the part (stages for the Bandleader, frameworks for the Mapper,
 // finding/headline gist for everyone else).
 function taskDigest(part: Part, tasks: string[]): string {
@@ -137,17 +137,17 @@ function compose(
       if (occ === 0)
         return `I'm the Stage Manager. I set the stage and brought in ${handoff || "the Bandleader"} to lead the work.`;
       if (isLastTurn && hasApproval)
-        return `Stage Manager again — once you signed off, I recorded the approval and opened the pull request.`;
-      return `Stage Manager here — I kept the room in order${handoff ? ` and looped in ${handoff}` : ""}.`;
+        return `Stage Manager again - once you signed off, I recorded the approval and opened the pull request.`;
+      return `Stage Manager here - I kept the room in order${handoff ? ` and looped in ${handoff}` : ""}.`;
     case "bandleader":
       if (occ === 0)
         return `Bandleader here. I broke the audit into stages and sent ${handoff || "the band"} in to work.`;
       if (isLastTurn && !handoff)
-        return `And that's the set — I pulled every finding into the final report and handed it back to you.`;
-      return `Back to me, the Bandleader — I gathered what came back${handoff ? ` and brought in ${handoff} next` : " and lined up the next move"}.`;
+        return `And that's the set - I pulled every finding into the final report and handed it back to you.`;
+      return `Back to me, the Bandleader - I gathered what came back${handoff ? ` and brought in ${handoff} next` : " and lined up the next move"}.`;
     case "reviewer":
       if (arts.verdict === "pass")
-        return `Reviewer. I checked the patch against a second model — it passed, so it was ready for your sign-off.`;
+        return `Reviewer. I checked the patch against a second model - it passed, so it was ready for your sign-off.`;
       if (arts.verdict === "revise")
         return `Reviewer. I checked the patch against a second model and sent it back to the Fixer for changes.`;
       return `Reviewer. I reviewed the work and reported my verdict${handoff ? ` to ${handoff}` : ""}.`;
@@ -163,7 +163,7 @@ function compose(
       return `I'm ${name}. I swept the code for committed secrets and reported back to ${to}.`;
     case "scout":
       return `I'm ${name}, on reconnaissance. I ingested the repo and built the context, then handed it back to ${to}.`;
-    default: // scanner — code / dependencies / any specialist
+    default: // scanner - code / dependencies / any specialist
       if (arts.findings > 0)
         return `I'm ${name}, on ${role}. I flagged ${arts.findings} issue${arts.findings === 1 ? "" : "s"} and handed ${arts.findings === 1 ? "it" : "them"} back to ${to}.`;
       return `I'm ${name}, on ${role}. I went over my area and reported back to ${to}.`;
@@ -198,7 +198,7 @@ export function buildWalkthrough(
   };
 
   // backbone: the TEXT messages, in order, grouped into contiguous same-speaker
-  // turns — these are the actual handoffs, not the raw evidence tasks.
+  // turns - these are the actual handoffs, not the raw evidence tasks.
   const texts = timeline.filter((m) =>
     m.sender_type !== "User" && m.mtype === "text" &&
     norm(m.sender) && norm(m.sender) !== "?" && index.has(norm(m.sender)));
@@ -211,7 +211,7 @@ export function buildWalkthrough(
   }
 
   // truncate the epilogue: the front-of-house Q&A (Customer Service) isn't part
-  // of the audit performance — cut at the first turn that is CS or hands to CS.
+  // of the audit performance - cut at the first turn that is CS or hands to CS.
   let cut = groups.length;
   for (let i = 0; i < groups.length; i++) {
     const g = groups[i];
@@ -221,7 +221,7 @@ export function buildWalkthrough(
   const perf = groups.slice(0, cut);
   const cutTime = cut < groups.length ? norm(groups[cut].items[0].created_at) || "9999" : "9999";
 
-  // every player's THOUGHT and TASK events, before the cut — used both to enrich
+  // every player's THOUGHT and TASK events, before the cut - used both to enrich
   // the spoken turns AND to surface agents that worked but never sent a chat.
   const acts = timeline.filter((m) =>
     m.sender_type !== "User" && (m.mtype === "task" || m.mtype === "thought") &&
@@ -229,7 +229,7 @@ export function buildWalkthrough(
     !isCS(norm(m.sender)) && norm(m.created_at) <= cutTime);
 
   // turn specs: the speaking turns (with handoffs), PLUS a turn for every player
-  // who worked but never spoke — so no one on stage is left silent. Ordered by
+  // who worked but never spoke - so no one on stage is left silent. Ordered by
   // when each turn began (first text, or first activity for the silent ones).
   interface Spec { name: string; items: TimelineItem[]; sort: string; close: string }
   const specs: Spec[] = perf.map((g) => ({
@@ -250,7 +250,7 @@ export function buildWalkthrough(
   specs.forEach((s, i) => { const a = turnsOf.get(s.name) || []; a.push(i); turnsOf.set(s.name, a); });
 
   // bucket each event into the agent's turn whose work it belongs to (its next
-  // report — work happens, then the agent reports), so a turn can also speak
+  // report - work happens, then the agent reports), so a turn can also speak
   // what it did and was reasoning about, not just the handoff.
   const buckets = new Map<number, { task: string[]; thought: string[] }>();
   for (const m of acts) {
@@ -274,7 +274,7 @@ export function buildWalkthrough(
     const n = occ.get(s.name) || 0;
     occ.set(s.name, n + 1);
 
-    // who this turn hands to — mentions across the turn, minus self and the human
+    // who this turn hands to - mentions across the turn, minus self and the human
     const ment = new Set<string>();
     for (const it of s.items) for (const mn of it.mentions || []) {
       const nm = norm(mn);
@@ -393,7 +393,7 @@ export function StageMic({ turns, onFocus }: {
   return (
     <div className={"stage-mic" + (playing ? " on" : "")}>
       <button className="mic-btn" onClick={playing ? stop : start}
-        title={playing ? "Stop the walkthrough" : "Hear the run — each agent tells their part, in order"}>
+        title={playing ? "Stop the walkthrough" : "Hear the run - each agent tells their part, in order"}>
         <Icon name={playing ? "stop" : "mic"} />
         <span>{playing ? "Stop the walkthrough" : "Hear the run"}</span>
       </button>
@@ -408,7 +408,7 @@ export function StageMic({ turns, onFocus }: {
         </div>
       )}
       {!supported && playing && (
-        <span className="mic-note mono">Audio isn&apos;t available in this browser — showing the walkthrough.</span>
+        <span className="mic-note mono">Audio isn&apos;t available in this browser - showing the walkthrough.</span>
       )}
     </div>
   );

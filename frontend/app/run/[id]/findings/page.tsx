@@ -19,8 +19,8 @@ function fileOf(f: FindingEntry): string {
 
 // Severity groups, in the order they should be read.
 const GROUPS: { kind: SevKind; heading: string; blurb: string }[] = [
-  { kind: "critical", heading: "High severity", blurb: "fix first — exploitable or sensitive" },
-  { kind: "attention", heading: "Needs review", blurb: "judgement call — confirm and triage" },
+  { kind: "critical", heading: "High severity", blurb: "fix first - exploitable or sensitive" },
+  { kind: "attention", heading: "Needs review", blurb: "judgement call - confirm and triage" },
   { kind: "info", heading: "Informational", blurb: "hygiene and lower-risk notes" },
 ];
 
@@ -63,7 +63,7 @@ export default async function RunFindings({ params }: { params: Promise<{ id: st
     return (
       <div className="empty" style={{ marginTop: "var(--s5)" }}>
         <Icon name="sparkle" />
-        <p>No findings for this run.<br />Nothing flagged — or the audit hasn&apos;t produced findings yet.</p>
+        <p>No findings for this run.<br />Nothing flagged - or the audit hasn&apos;t produced findings yet.</p>
       </div>
     );
   }

@@ -1,4 +1,4 @@
-// A run is one Band room — its id is a long uuid. To make runs memorable and
+// A run is one Band room - its id is a long uuid. To make runs memorable and
 // nameable (not just an opaque id), we derive a stable, concert-hall-themed
 // codename deterministically from the room_id. Same id → same name, everywhere.
 

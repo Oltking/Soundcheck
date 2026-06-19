@@ -1,6 +1,6 @@
 "use client";
 
-// The Encore — the post-session curtain call. When the set is over, the band
+// The Encore - the post-session curtain call. When the set is over, the band
 // takes a bow: a deterministic retrospective computed entirely from the Band
 // projection (timeline + findings + ledger), so it always works and is fully
 // replayable. This is the foundation the "continue the work" and the agent-voiced
@@ -54,7 +54,7 @@ export function Encore({
     const controls = ledger.ControlMapping || [];
 
     const verdictOf = (r: LedgerEntry) =>
-      (r.tags.find((t) => t.startsWith("verdict:")) || "verdict:—").split(":")[1];
+      (r.tags.find((t) => t.startsWith("verdict:")) || "verdict:-").split(":")[1];
     const passed = reviews.filter((r) => verdictOf(r) === "pass").length;
     const revised = reviews.filter((r) => verdictOf(r) === "revise").length;
 
@@ -104,7 +104,7 @@ export function Encore({
       if (fBy) bits.push(`flagged ${fBy} finding${fBy === 1 ? "" : "s"}`);
       if (cBy) bits.push(`mapped ${cBy} control${cBy === 1 ? "" : "s"}`);
       if (pBy) bits.push(`proposed ${pBy} patch${pBy === 1 ? "" : "es"}`);
-      if (rPass || rRev) bits.push(`reviewed ${rPass + rRev} — ${rPass} passed, ${rRev} sent back`);
+      if (rPass || rRev) bits.push(`reviewed ${rPass + rRev} - ${rPass} passed, ${rRev} sent back`);
       if (aBy) bits.push("recorded the approval");
       if (!bits.length) bits.push(`${c.msgs} message${c.msgs === 1 ? "" : "s"}, ${c.tasks} task${c.tasks === 1 ? "" : "s"}`);
       return { name, inst, role, line: bits.join(" · "), first: c.first };
@@ -212,7 +212,7 @@ export function Encore({
           <div className="encore-open-actions">
             {d.continueTarget && (
               <FixButton roomId={roomId} file={d.continueTarget.file} finding={d.continueTarget.finding}
-                label="Send them back in" sentLabel="On it — opening the Stage…" />
+                label="Send them back in" sentLabel="On it - opening the Stage…" />
             )}
             <Link href={`/run/${roomId}/stage`} className="btn">
               <Icon name="play" /> Back to the Stage
@@ -246,7 +246,7 @@ export function Encore({
   );
 }
 
-// The Producer's notes — shows existing PolishNotes, or offers to generate them
+// The Producer's notes - shows existing PolishNotes, or offers to generate them
 // (OSS lane, written to Band) and polls for them to land.
 function PolishPanel({ roomId, initial, hasPatch }: {
   roomId: string; initial: LedgerEntry[]; hasPatch: boolean;
@@ -277,7 +277,7 @@ function PolishPanel({ roomId, initial, hasPatch }: {
     return (
       <section className="encore-polish">
         <h2><Icon name="sparkle" /> The Producer&apos;s notes</h2>
-        <p className="ep-sub">How the patched code could be polished further — suggestions only, nothing applied.</p>
+        <p className="ep-sub">How the patched code could be polished further - suggestions only, nothing applied.</p>
         <div className="polish-list">
           {notes.map((n, i) => (
             <div key={n.id || i} className="polish-note">
@@ -297,7 +297,7 @@ function PolishPanel({ roomId, initial, hasPatch }: {
   return (
     <section className="encore-polish ask">
       <h2><Icon name="sparkle" /> The Producer&apos;s notes</h2>
-      <p className="ep-sub">Ask the band how the patched code could be polished further — a few concrete, defensive-only next steps.</p>
+      <p className="ep-sub">Ask the band how the patched code could be polished further - a few concrete, defensive-only next steps.</p>
       <button className="btn btn-primary" onClick={ask} disabled={state === "working"}>
         <Icon name={state === "working" ? "clock" : "sparkle"} />
         {state === "working" ? "The Producer is drafting…" : state === "error" ? "Retry" : "Ask for polish notes"}

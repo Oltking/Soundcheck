@@ -1,6 +1,6 @@
 "use client";
 
-// Propose a fix for a finding — launches the remediation loop (Fixer → Reviewer →
+// Propose a fix for a finding - launches the remediation loop (Fixer → Reviewer →
 // your approval → PR) in the run's room, no CLI. Spending model tokens, so it's a
 // deliberate click with a clear note. Afterwards it takes you to the LIVE Stage so
 // you watch the Reviewer review and the fix get done. When it's already used ON the
@@ -44,7 +44,7 @@ export function FixButton({
     return (
       <button className={`${cls} done`} disabled>
         <Icon name="check" />
-        {sentLabel || (onProposed ? "Sent — watch the band" : "Sent — opening the Stage…")}
+        {sentLabel || (onProposed ? "Sent - watch the band" : "Sent - opening the Stage…")}
       </button>
     );
   }
@@ -52,7 +52,7 @@ export function FixButton({
     <button className={cls} onClick={propose} disabled={state === "starting" || !file}
       title={file ? `Remediate ${file}` : "No file location on this finding"}>
       <Icon name={state === "starting" ? "clock" : "handoff"} />
-      {state === "starting" ? "Sending the Fixer…" : state === "error" ? "Retry — couldn’t start" : label}
+      {state === "starting" ? "Sending the Fixer…" : state === "error" ? "Retry - couldn’t start" : label}
     </button>
   );
 }

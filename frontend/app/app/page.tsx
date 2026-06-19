@@ -8,7 +8,7 @@ import { runName, runShortId, runStatus } from "@/lib/run-name";
 import type { Run } from "@/lib/types";
 
 function when(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "-";
   return new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
@@ -35,13 +35,13 @@ export default async function AppHome() {
       <section className="launch">
         <div className="launch-kicker mono">the conductor’s desk</div>
         <h1>Start an audit, or open a run.</h1>
-        <p>Connect a repository and the band performs — audit, control-mapping, fix, cross-model review — all through Band, all replayable. You approve every change.</p>
+        <p>Connect a repository and the band performs - audit, control-mapping, fix, cross-model review - all through Band, all replayable. You approve every change.</p>
         <Connect />
       </section>
 
       <div className="runs-head">
         <h2>Runs</h2>
-        <span className="sub">each audit is one Band room — the system of record</span>
+        <span className="sub">each audit is one Band room - the system of record</span>
       </div>
 
       {error && <div className="error-banner">{error}</div>}

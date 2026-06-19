@@ -1,9 +1,9 @@
 "use client";
 
-// The Stage — the concert-hall view, wired to LIVE Band data (timeline +
+// The Stage - the concert-hall view, wired to LIVE Band data (timeline +
 // findings via the BFF). The band sits small along an arc; whoever is performing
 // now STEPS FORWARD into the spotlight at centre stage and grows large enough to
-// read everything they're doing — task and all. Players take turns (auto-rotate
+// read everything they're doing - task and all. Players take turns (auto-rotate
 // + follow the latest live activity); click any seat to pin the spotlight on it.
 // On narrow screens it switches to a mobile layout: a full-width performer card
 // above a tappable rail of the seated band.
@@ -27,7 +27,7 @@ function fileOf(content: string): string {
 }
 
 const SEAT_W = 152, SEAT_H = 92;   // compact seated card (layout footprint)
-const SPOT_W = 740;                // the spotlight (centre-stage) card — wide & short
+const SPOT_W = 740;                // the spotlight (centre-stage) card - wide & short
 
 interface Seat { cx: number; cy: number; left: number; top: number }
 interface Layout {
@@ -79,8 +79,8 @@ interface Player {
   name: string;
   inst: keyof typeof INSTRUMENTS;
   role: string;
-  says: { text: string; mentions: string[] }[]; // the chat — text messages, oldest → newest
-  activity: [string, string][];                 // the rest — [verb, detail] non-text events
+  says: { text: string; mentions: string[] }[]; // the chat - text messages, oldest → newest
+  activity: [string, string][];                 // the rest - [verb, detail] non-text events
   handoff: string[];                            // who the latest say addresses
   seatLine: string;                             // one-line summary for the seated card
   status: "idle" | "thinking" | "done";
@@ -111,7 +111,7 @@ export function StageView({
   // The Stage is the live operations console: proposing a fix from the Score rail
   // flips this Stage live so you watch the Fixer → Reviewer perform in place.
   const [liveOn, setLiveOn] = useState(live);
-  // immediate feedback the moment a fix is requested — the Fixer takes ~30-60s to
+  // immediate feedback the moment a fix is requested - the Fixer takes ~30-60s to
   // clone + patch, so without this the Stage looks inert ("nothing happened").
   const [justProposed, setJustProposed] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -134,7 +134,7 @@ export function StageView({
     return () => { alive = false; clearInterval(iv); };
   }, [roomId, liveOn]);
 
-  // Remediation/approval state (the ledger) — fetched once on mount and on every
+  // Remediation/approval state (the ledger) - fetched once on mount and on every
   // live tick, so the approval gate can live on the Stage too.
   useEffect(() => {
     let alive = true;
@@ -199,7 +199,7 @@ export function StageView({
   }, [players.length]);
 
   // Auto-rotate ONLY on a finished/replay run (to show each player in turn).
-  // On a LIVE stage there is no timer — the spotlight follows real activity below.
+  // On a LIVE stage there is no timer - the spotlight follows real activity below.
   useEffect(() => {
     if (liveOn || pinned || players.length < 2) return;
     const iv = setInterval(() => setSpot((s) => (s + 1) % players.length), 3800);
@@ -254,12 +254,12 @@ export function StageView({
   const current = players[spot];
 
   // "audit complete" once findings exist and the band has gone quiet (or it's a
-  // finished, non-live run) — a clear cue + next step instead of dead air.
+  // finished, non-live run) - a clear cue + next step instead of dead air.
   const lastTs = timeline.length ? new Date(timeline[timeline.length - 1].created_at || 0).getTime() : 0;
   const idle = lastTs > 0 && Date.now() - lastTs > 25000;
   const auditDone = findings.length > 0 && (!liveOn || idle);
 
-  // The Mic — once the set is done, the band can re-perform in words. Build the
+  // The Mic - once the set is done, the band can re-perform in words. Build the
   // ordered, spoken walkthrough from the same live timeline + ledger.
   const walkthrough = useMemo(
     () => buildWalkthrough(timeline, players, findings, ledger),
@@ -269,11 +269,11 @@ export function StageView({
     else { setSpot(i); setPinned(true); }
   };
 
-  // remediation gate — the loop is now visible AND actionable on the Stage
+  // remediation gate - the loop is now visible AND actionable on the Stage
   const patch = ledger.PatchProposal?.[0];
   const review = ledger.ReviewResult?.[0];
   const approval = ledger.Approval?.[0];
-  const verdict = (review?.tags.find((t) => t.startsWith("verdict:")) || "verdict:—").split(":")[1];
+  const verdict = (review?.tags.find((t) => t.startsWith("verdict:")) || "verdict:-").split(":")[1];
   // for "send them back in": recover the file + finding the patch was for
   const patchFile = (patch?.content || "").match(/Files:\s*([^\n,]+)/)?.[1]?.trim() || "";
   const reFinding =
@@ -287,7 +287,7 @@ export function StageView({
     {approval ? (
       <div className="stage-remedy approved">
         <span className="sr-ico"><SevGlyph kind="approved" /></span>
-        <span className="sr-text"><b>Approved.</b> You authorized the patch — the Stage Manager is opening the pull request.</span>
+        <span className="sr-text"><b>Approved.</b> You authorized the patch - the Stage Manager is opening the pull request.</span>
         <Link href={`/run/${roomId}/conductor`} className="sr-cta">Audit deliverable <Icon name="chevron" /></Link>
       </div>
     ) : review && verdict === "pass" ? (
@@ -295,7 +295,7 @@ export function StageView({
         <div className="sr-line">
           <span className="sr-ico"><Icon name="check" /></span>
           <span className="sr-text">
-            <b>A fix is ready for your sign-off.</b> The Reviewer returned <span className={`verdict v-${verdict}`}>{verdict.toUpperCase()}</span> — nothing ships until you authorize.
+            <b>A fix is ready for your sign-off.</b> The Reviewer returned <span className={`verdict v-${verdict}`}>{verdict.toUpperCase()}</span> - nothing ships until you authorize.
           </span>
         </div>
         <ApproveAction roomId={roomId} />
@@ -305,19 +305,19 @@ export function StageView({
         <div className="sr-line">
           <span className="sr-ico"><Icon name="handoff" /></span>
           <span className="sr-text">
-            <b>The Reviewer requested changes</b> <span className={`verdict v-${verdict}`}>{verdict?.toUpperCase()}</span> — the patch did not pass cross-model review, so no sign-off was requested. Send the band back in and the Fixer will revise it with the Reviewer&apos;s feedback.
+            <b>The Reviewer requested changes</b> <span className={`verdict v-${verdict}`}>{verdict?.toUpperCase()}</span> - the patch did not pass cross-model review, so no sign-off was requested. Send the band back in and the Fixer will revise it with the Reviewer&apos;s feedback.
           </span>
         </div>
         {patchFile && (
           <FixButton roomId={roomId} file={patchFile} finding={reFindingText}
-            label="Send them back in" sentLabel="On it — the Fixer is revising"
+            label="Send them back in" sentLabel="On it - the Fixer is revising"
             onProposed={() => { setLiveOn(true); setJustProposed(true); }} />
         )}
       </div>
     ) : patch ? (
       <div className="stage-remedy working">
         <span className="sr-ico"><Icon name="clock" /></span>
-        <span className="sr-text"><b>Fix in progress.</b> The Fixer proposed a patch — the Reviewer is checking it now. Watch it unfold below.</span>
+        <span className="sr-text"><b>Fix in progress.</b> The Fixer proposed a patch - the Reviewer is checking it now. Watch it unfold below.</span>
       </div>
     ) : justProposed ? (
       <div className="stage-remedy working">
@@ -327,7 +327,7 @@ export function StageView({
     ) : auditDone ? (
       <Link href={`/run/${roomId}/encore`} className="stage-done">
         <span className="sd-ico"><SevGlyph kind="approved" /></span>
-        <span className="sd-text"><b>That&apos;s a wrap.</b> {findings.length} findings flagged — propose a fix from the Score, or see the band take a bow.</span>
+        <span className="sd-text"><b>That&apos;s a wrap.</b> {findings.length} findings flagged - propose a fix from the Score, or see the band take a bow.</span>
         <span className="sd-cta">The Encore <Icon name="chevron" /></span>
       </Link>
     ) : null}
@@ -360,10 +360,10 @@ export function StageView({
       <div className="stage-legend">
         <span><i className="lg-card" /> the band is seated along the arc</span>
         <span><i className="lg-thread" /> whoever’s performing steps into the spotlight</span>
-        <span><i className="lg-podium" /> you preside — nothing ships without sign-off</span>
+        <span><i className="lg-podium" /> you preside - nothing ships without sign-off</span>
       </div>
 
-      {auditDone && walkthrough.length > 0 && (
+      {walkthrough.length > 0 && (
         <StageMic turns={walkthrough} onFocus={focusSeat} />
       )}
 
@@ -386,7 +386,7 @@ export function StageView({
                   </button>
                 ))}
               </div>
-              <div className="m-podium mono"><b>{conductorName}</b> · the conductor — nothing ships without sign-off</div>
+              <div className="m-podium mono"><b>{conductorName}</b> · the conductor - nothing ships without sign-off</div>
             </div>
           )
         ) : players.length === 0 ? (
@@ -425,7 +425,7 @@ export function StageView({
   );
 }
 
-// Live "being written" effect — reveals text word by word, keeping the column
+// Live "being written" effect - reveals text word by word, keeping the column
 // pinned to the bottom as it types (only used on a LIVE stage).
 function Typewriter({ text, scrollRef }: { text: string; scrollRef: { current: HTMLDivElement | null } }) {
   const words = useMemo(() => text.split(/(\s+)/), [text]);
@@ -452,7 +452,7 @@ function SpotlightInner({ player, pinned, names, live }: {
   const logRef = useRef<HTMLDivElement>(null);
 
   // chat-style: start scrolled to the BOTTOM (the newest), and stay there as
-  // new says/events arrive — for both live and finished runs.
+  // new says/events arrive - for both live and finished runs.
   useEffect(() => {
     if (nowRef.current) nowRef.current.scrollTop = nowRef.current.scrollHeight;
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
@@ -479,11 +479,11 @@ function SpotlightInner({ player, pinned, names, live }: {
         )}
       </div>
       <div className="p-body">
-        {/* left column — the SAY (the chat) */}
+        {/* left column - the SAY (the chat) */}
         <div className="p-now" ref={nowRef}>
           <span className="now-k mono">say · the chat</span>
           {player.says.length === 0 ? (
-            <div className="say-line">— standing by —</div>
+            <div className="say-line">- standing by -</div>
           ) : (
             <div className="say-stream">
               {player.says.map((s, i) => {
@@ -499,11 +499,11 @@ function SpotlightInner({ player, pinned, names, live }: {
             </div>
           )}
         </div>
-        {/* right column — the rest of the events (think, tasks, tools), newest at bottom */}
+        {/* right column - the rest of the events (think, tasks, tools), newest at bottom */}
         <div className="p-log" ref={logRef}>
           <span className="now-k mono">events</span>
           {player.activity.length === 0 ? (
-            <div className="logline">— no events yet —</div>
+            <div className="logline">- no events yet -</div>
           ) : (
             player.activity.map((ln, i) => (
               <div className="logline" key={i}><span className="k">{ln[0]}</span> {ln[1]}</div>
@@ -574,7 +574,7 @@ function FloorBg({ W, H, podium, spot }: {
   );
 }
 
-// First-run / no-activity state — fills the stage with what's about to happen,
+// First-run / no-activity state - fills the stage with what's about to happen,
 // the flow, and a way back, instead of a bare "nothing here" note.
 function StageEmpty() {
   const FLOW = ["Audit", "Map", "Fix", "Review", "Approve"];
@@ -583,8 +583,8 @@ function StageEmpty() {
       <div className="se-mark"><Icon name="play" /></div>
       <h3>The stage is set.</h3>
       <p>
-        No one&apos;s performed yet. When the audit runs, the band takes their places here —
-        Scout reads the repo, the scanners flag findings, the Mapper ties them to controls —
+        No one&apos;s performed yet. When the audit runs, the band takes their places here -
+        Scout reads the repo, the scanners flag findings, the Mapper ties them to controls -
         and you watch every handoff live.
       </p>
       <div className="se-flow">

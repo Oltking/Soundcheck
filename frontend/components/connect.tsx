@@ -1,6 +1,6 @@
 "use client";
 
-// Connect — the entry point: start a real audit. Starting spends model tokens,
+// Connect - the entry point: start a real audit. Starting spends model tokens,
 // so it's a deliberate action with a clear note. After kickoff it polls for the
 // new Band room and drops you onto its live Stage. The wait can be long, so we
 // rotate through what the band is actually doing.
@@ -46,7 +46,7 @@ export function Connect() {
     setState("starting");
     try {
       // start (server snapshots existing rooms), then poll to discover + claim
-      // the new room — all server-side, so the client never sees others' runs.
+      // the new room - all server-side, so the client never sees others' runs.
       const { baseline } = await api.startAndWatch(target.trim() || undefined);
       setState("waiting");
       for (let i = 0; i < 40; i++) {
@@ -58,7 +58,7 @@ export function Connect() {
         }
       }
       setState("error");
-      setMsg("The run started but no room appeared yet — check Runs below in a moment.");
+      setMsg("The run started but no room appeared yet - check Runs below in a moment.");
     } catch (e) {
       setState("error");
       setMsg(`Could not start a run: ${(e as Error).message}`);
@@ -70,7 +70,7 @@ export function Connect() {
       <div className="connect-row">
         <input
           className="connect-input"
-          placeholder="Repository to audit — a GitHub URL, or leave blank for the bundled test repo"
+          placeholder="Repository to audit - a GitHub URL, or leave blank for the bundled test repo"
           value={target}
           onChange={(e) => setTarget(e.target.value)}
           disabled={busy}
@@ -87,7 +87,7 @@ export function Connect() {
             <span key={phase} className="cl-phase">{PHASES[phase]}…</span>
           </span>
         ) : (
-          msg || "A live run: the workforce audits the repo through Band. It uses model credits — start one deliberately."
+          msg || "A live run: the workforce audits the repo through Band. It uses model credits - start one deliberately."
         )}
       </div>
     </div>

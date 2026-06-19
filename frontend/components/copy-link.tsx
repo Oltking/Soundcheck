@@ -1,7 +1,7 @@
 "use client";
 
 // Copy a shareable link to the current record (the run's authority page).
-// Read-only governance artifact — "the thing an auditor receives."
+// Read-only governance artifact - "the thing an auditor receives."
 
 import { useState } from "react";
 import { Icon } from "@/components/glyphs";
@@ -14,7 +14,7 @@ export function CopyLink({ label = "Copy link to this record" }: { label?: strin
       setDone(true);
       setTimeout(() => setDone(false), 1800);
     } catch {
-      /* clipboard blocked — no-op */
+      /* clipboard blocked - no-op */
     }
   }
   return (

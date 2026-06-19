@@ -1,4 +1,4 @@
-/* The Stage — concert-hall component styles, ported from design/reference/The_Stage.html.
+/* The Stage - concert-hall component styles, ported from design/reference/The_Stage.html.
    Global resets, #root, and the topbar chrome were dropped (our app shell + nav own those);
    only the stage/player/score-rail/finding styles remain so they can't break other pages. */
 
@@ -20,7 +20,7 @@
 .stage-head .tallies span { display: inline-flex; align-items: center; gap: 5px; }
 .stage-head .tallies svg { width: 10px; height: 10px; }
 
-/* "now in the spotlight" — fills the head's centre and shows who's performing */
+/* "now in the spotlight" - fills the head's centre and shows who's performing */
 .stage-now { display: inline-flex; align-items: center; gap: 9px; min-width: 0;
   padding: 5px 13px 5px 9px; border-radius: var(--r-pill);
   background: var(--surface); border: 1px solid var(--line-soft);
@@ -342,7 +342,7 @@
   .mic-btn { font-size: var(--t-xs); padding: 7px 12px; }
 }
 
-/* ============ The Encore — post-session curtain call ============ */
+/* ============ The Encore - post-session curtain call ============ */
 .encore { position: relative; max-width: 1100px; margin: var(--s4) auto 0; }
 .encore-curtain { position: absolute; inset: -24px -24px auto -24px; height: 180px; z-index: 0;
   background: radial-gradient(120% 100% at 50% 0%, var(--live-tint) 0%, transparent 70%);
@@ -430,7 +430,7 @@
 .encore-polish.ask { background: var(--paper-well); border: 1px solid var(--line);
   border-radius: var(--r-lg); padding: var(--s5); }
 
-/* The Mic — the voiced run-walkthrough control + the speaking caption. */
+/* The Mic - the voiced run-walkthrough control + the speaking caption. */
 .stage-mic { display: flex; flex-direction: column; gap: var(--s2); padding: var(--s2) var(--s5) 0; }
 .mic-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
   padding: 8px 14px; border-radius: var(--r-pill); cursor: pointer;

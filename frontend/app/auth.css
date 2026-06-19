@@ -1,4 +1,4 @@
-/* Login / sign-up — a centered card on the paper background. */
+/* Login / sign-up - a centered card on the paper background. */
 .auth-page {
   min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: var(--s5); padding: var(--s6) var(--s4);

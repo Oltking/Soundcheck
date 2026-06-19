@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
 // Global app nav = cross-run views only. It does NOT render on the marketing
-// site ("/") or the auth pages — those own their own chrome. Per-run screens
+// site ("/") or the auth pages - those own their own chrome. Per-run screens
 // live under a run's own tab bar so run context never gets lost.
 const LINKS = [
   { href: "/app", label: "Runs" },

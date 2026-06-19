@@ -1,6 +1,6 @@
 "use client";
 
-// A small chat dock in the corner of the Stage — the Stage IS the room, so you
+// A small chat dock in the corner of the Stage - the Stage IS the room, so you
 // ask here and Customer Service's answers appear right on the stage. Questions are
 // relayed into the Band room (via the Stage Manager); we poll the room for replies.
 
@@ -112,7 +112,7 @@ export function StageChat({ roomId, initialTimeline }: { roomId: string; initial
         <button className="sc-x" onClick={() => setOpen(false)} aria-label="Close chat"><Icon name="chevron" /></button>
       </div>
       <div className="sc-stream" ref={scroller}>
-        {msgs.length === 0 && <div className="sc-empty">Ask anything about this run — “most serious finding?”, “which controls are hit?”</div>}
+        {msgs.length === 0 && <div className="sc-empty">Ask anything about this run - “most serious finding?”, “which controls are hit?”</div>}
         {msgs.map((m) => (
           <div key={m.id} className={`sc-msg ${m.role}`}>
             <div className="sc-bubble"><MentionText text={m.text} mentions={m.mentions} /></div>

@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { api } from "@/lib/api";
 import { claimRoom } from "@/lib/owner";
 
-// Find the run the user just started — the newest room not in the baseline —
+// Find the run the user just started - the newest room not in the baseline -
 // and claim it for them. Returns { roomId } once it appears, else { roomId: null }.
 export async function POST(req: Request) {
   const session = await auth();
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   let baseline: string[] = [];
   try {
     baseline = (await req.json())?.baseline ?? [];
-  } catch { /* no body — treat as empty baseline */ }
+  } catch { /* no body - treat as empty baseline */ }
   const seen = new Set(baseline);
 
   try {

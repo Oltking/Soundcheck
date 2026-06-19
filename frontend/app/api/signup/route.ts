@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     return NextResponse.json({ error: "Enter a valid email." }, { status: 400 });
   if (nickname.length < 2 || nickname.length > 40)
-    return NextResponse.json({ error: "Pick a nickname (2–40 characters)." }, { status: 400 });
+    return NextResponse.json({ error: "Pick a nickname (2-40 characters)." }, { status: 400 });
   if (password.length < 8)
     return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
 
